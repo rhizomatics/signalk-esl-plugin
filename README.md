@@ -1,5 +1,7 @@
 # ESL for SignalK
 
+** ALPHA - not yet fully functioning and very limited vendor/product support **
+
 A SignalK plugin to display data from SignalK paths, APIs and plugins on Electronic Shelf Labels over a Bluetooth Low Energy (BLE) connection.  
 
 Electronic Shelf Labels (ESLs) are eInk devices that consume very little battery energy, presuming they are not constantly updated - the battery is used only when the display changes, and a periodic BLE check for incoming changes. 
