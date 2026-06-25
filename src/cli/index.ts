@@ -1,7 +1,10 @@
 #!/usr/bin/env node
+import { readFile, writeFile } from 'fs/promises';
 import { Command } from 'commander';
 import { allDrivers, getDriver, registerDriver } from '../devices/registry';
 import { ZhsunycoDriver } from '../devices/zhsunyco';
+import { SvgRenderer } from '../render/svgRenderer';
+import { bitmapToPng } from '../render/png';
 
 registerDriver(new ZhsunycoDriver());
 
@@ -49,6 +52,23 @@ program
       throw new Error(`no driver registered for vendor "${opts.vendor}"`);
     }
     throw new Error('paint not yet implemented: needs the SVG renderer (see SvgRenderer)');
+  });
+
+program
+  .command('render')
+  .description('Render a template against a JSON data fixture and write a PNG, without needing a device')
+  .requiredOption('-t, --template <path>', 'path to SVG template')
+  .requiredOption('-d, --data <path>', 'path to JSON data fixture')
+  .requiredOption('-o, --output <path>', 'output PNG path')
+  .option('-w, --width <px>', 'render width', '416')
+  .option('--height <px>', 'render height', '240')
+  .requiredOption('-f, --font <path>', 'font file to embed (repeatable) - resvg-wasm cannot see host system fonts', (value, previous: string[] = []) => [...previous, value])
+  .action(async (opts) => {
+    const context = JSON.parse(await readFile(opts.data, 'utf-8'));
+    const renderer = new SvgRenderer(opts.font);
+    const bitmap = await renderer.render(opts.template, context, Number(opts.width), Number(opts.height));
+    await writeFile(opts.output, bitmapToPng(bitmap));
+    console.log(`wrote ${opts.output} (${bitmap.width}x${bitmap.height})`);
   });
 
 program.parseAsync(process.argv).catch((err) => {

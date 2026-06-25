@@ -26,11 +26,18 @@
     "node": ">=18"
   },
   "dependencies": {
-    "commander": "^12.1.0"
+    "@resvg/resvg-wasm": "^2.6.2",
+    "@xmldom/xmldom": "^0.9.10",
+    "commander": "^12.1.0",
+    "handlebars": "^4.7.9",
+    "luxon": "^3.7.2",
+    "pngjs": "^7.0.0"
   },
   "devDependencies": {
     "@signalk/server-api": "^2.28.0",
+    "@types/luxon": "^3.7.1",
     "@types/node": "^20.14.0",
+    "@types/pngjs": "^6.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.0"
   }
