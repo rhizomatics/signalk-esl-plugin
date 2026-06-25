@@ -4,6 +4,7 @@ import { Resvg, initWasm } from '@resvg/resvg-wasm';
 import { Bitmap, Renderer, TemplateContext } from './types';
 import { resolvePath } from './path';
 import { Handlebars } from './helpers';
+import { DEFAULT_FONT_PATHS } from './fonts';
 
 let wasmReady: Promise<void> | undefined;
 
@@ -28,11 +29,13 @@ function ensureWasmInitialized(): Promise<void> {
  * are silently no-ops under plain Node) - it only renders text if given font
  * bytes directly via `fontBuffers`, read from disk by us. Without at least one
  * font path configured, all text elements render as nothing, with no error.
+ * Defaults to the bundled monospace/sans-serif/serif trio (see ./fonts.ts) so
+ * templates can use plain CSS generic font-family keywords.
  */
 export class SvgRenderer implements Renderer {
   private fontBuffers?: Promise<Uint8Array[]>;
 
-  constructor(private readonly fontPaths: string[]) {
+  constructor(private readonly fontPaths: string[] = DEFAULT_FONT_PATHS) {
     if (fontPaths.length === 0) {
       throw new Error('SvgRenderer requires at least one font path - resvg-wasm cannot use host system fonts');
     }

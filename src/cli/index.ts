@@ -62,10 +62,14 @@ program
   .requiredOption('-o, --output <path>', 'output PNG path')
   .option('-w, --width <px>', 'render width', '416')
   .option('--height <px>', 'render height', '240')
-  .requiredOption('-f, --font <path>', 'font file to embed (repeatable) - resvg-wasm cannot see host system fonts', (value, previous: string[] = []) => [...previous, value])
+  .option(
+    '-f, --font <path>',
+    'override a bundled font with this file (repeatable) - defaults to the bundled monospace/sans-serif/serif trio',
+    (value, previous: string[] = []) => [...previous, value],
+  )
   .action(async (opts) => {
     const context = JSON.parse(await readFile(opts.data, 'utf-8'));
-    const renderer = new SvgRenderer(opts.font);
+    const renderer = opts.font ? new SvgRenderer(opts.font) : new SvgRenderer();
     const bitmap = await renderer.render(opts.template, context, Number(opts.width), Number(opts.height));
     await writeFile(opts.output, bitmapToPng(bitmap));
     console.log(`wrote ${opts.output} (${bitmap.width}x${bitmap.height})`);

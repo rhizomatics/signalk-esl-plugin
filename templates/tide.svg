@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="416" height="240" viewBox="0 0 416 240">
   <rect x="0" y="0" width="416" height="240" fill="white" />
-  <text id="station.name" x="10" y="24" font-size="18" fill="black">{{value}}</text>
-  <text id="extremes.0.label" x="10" y="60" font-size="14" fill="black">{{value}}</text>
-  <text id="extremes.0.time" x="120" y="60" font-size="14" fill="black">{{formatTime value environment.time.timezoneRegion}}</text>
-  <text id="extremes.1.label" x="10" y="84" font-size="14" fill="black">{{value}}</text>
-  <text id="extremes.1.time" x="120" y="84" font-size="14" fill="black">{{formatTime value environment.time.timezoneRegion}}</text>
-  <text id="environment.time.timezoneRegion" x="10" y="230" font-size="10" fill="red">{{value}}</text>
+  <text id="station.name" x="10" y="24" font-size="18" font-family="serif" fill="black">{{value}}</text>
+  <text id="extremes.0.label" x="10" y="60" font-size="14" font-family="monospace" fill="black">{{value}}</text>
+  <text id="extremes.0.time" x="120" y="60" font-size="14" font-family="monospace" fill="black">{{formatTime value environment.time.timezoneRegion}}</text>
+  <text id="extremes.1.label" x="10" y="84" font-size="14" font-family="monospace" fill="black">{{value}}</text>
+  <text id="extremes.1.time" x="120" y="84" font-size="14" font-family="monospace" fill="black">{{formatTime value environment.time.timezoneRegion}}</text>
+  <text id="environment.time.timezoneRegion" x="10" y="230" font-size="10" font-family="sans-serif" fill="red">{{value}}</text>
 </svg>
