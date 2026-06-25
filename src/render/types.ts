@@ -9,7 +9,7 @@ export interface Bitmap {
   data: Uint8Array;
 }
 
-/** Arbitrary data made available to a template's Handlebars expressions and id-path lookups. */
+/** Arbitrary data made available to a template's Handlebars expressions. */
 export type TemplateContext = Record<string, unknown>;
 
 export interface Renderer {

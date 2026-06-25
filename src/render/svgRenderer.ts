@@ -2,7 +2,6 @@ import { readFile } from 'fs/promises';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import { Resvg, initWasm } from '@resvg/resvg-wasm';
 import { Bitmap, Renderer, TemplateContext } from './types';
-import { resolvePath } from './path';
 import { Handlebars } from './helpers';
 import { DEFAULT_FONT_PATHS } from './fonts';
 
@@ -18,15 +17,18 @@ function ensureWasmInitialized(): Promise<void> {
 /**
  * Renders an SVG+Handlebars template to a common RGBA bitmap.
  *
- * Binding model: any `<text>` element with an `id` attribute has that id resolved
- * as a dotted path (supports array indices, e.g. "extremes.0.time") against the
- * supplied context. The resolved value is exposed as `value` alongside the
- * full context while rendering that element's text content as a Handlebars
- * template, so templates can use helpers like `{{truncate value 1}}` or
- * `{{formatTime value environment.time.timezoneRegion}}`. Scoped to `<text>`
- * rather than all elements - setting `textContent` on a structural element
- * (e.g. the root `<svg>`) wipes its children, and `getElementsByTagName` is a
- * live NodeList, so that previously truncated the whole tree and rendered blank.
+ * Binding model: a `<text>` element with a `<desc>` child has that child's
+ * content compiled as a Handlebars template against the full context and
+ * substituted in as the element's text, e.g.
+ * `<desc>{{formatTime extremes.0.time environment.time.timezoneRegion}}</desc>`.
+ * The `<text>` element's own visible content is left untouched in the source
+ * file - it's just a placeholder so the template looks sane while laying it
+ * out in an SVG editor - and is only overwritten in the in-memory copy used
+ * for this render. `<text>` elements with no `<desc>` are left as static text.
+ * Scoped to `<text>` rather than all elements with an id - setting `textContent`
+ * on a structural element (e.g. the root `<svg>`) wipes its children, and
+ * `getElementsByTagName` is a live NodeList, so that previously truncated the
+ * whole tree and rendered blank.
  *
  * resvg-wasm cannot see the host's installed fonts (`loadSystemFonts`/`fontFiles`
  * are silently no-ops under plain Node) - it only renders text if given font
@@ -60,12 +62,13 @@ export class SvgRenderer implements Renderer {
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements.item(i);
-      const id = element?.getAttribute('id');
-      if (!element || !id) continue;
+      if (!element) continue;
 
-      const value = resolvePath(context, id);
-      const template = element.textContent ?? '';
-      element.textContent = Handlebars.compile(template)({ ...context, value });
+      const descElement = element.getElementsByTagName('desc').item(0);
+      if (!descElement) continue;
+
+      const expression = descElement.textContent ?? '';
+      element.textContent = Handlebars.compile(expression)(context);
     }
 
     const svgOutput = new XMLSerializer().serializeToString(doc);

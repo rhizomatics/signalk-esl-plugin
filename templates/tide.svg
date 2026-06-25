@@ -53,7 +53,8 @@
      font-size="18"
      font-family="serif"
      fill="yellow"
-     style="-inkscape-font-specification:'serif, Bold';font-family:serif;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal;font-size:24px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000">{{value}}</text>
+     style="-inkscape-font-specification:'serif, Bold';font-family:serif;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal;font-size:24px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffff00;stroke:#000000;stroke-opacity:1">Tobermory<desc
+   id="desc1">{{station.name}}</desc></text>
   <text
      id="station.name-8"
      x="3.2937632"
@@ -73,62 +74,8 @@
      font-size="14"
      font-family="monospace"
      fill="black"
-     style="-inkscape-font-specification:'monospace, Normal';font-family:monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:18.6667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ff0000">{{tideLabel value}}</text>
-  <text
-     id="extremes.0.time"
-     x="20.237019"
-     y="39.217663"
-     font-size="14"
-     font-family="monospace"
-     fill="red"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.6107px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:0.544254"
-     transform="scale(0.4204357,2.378485)">{{formatTime value environment.time.timezoneRegion}}</text>
-  <text
-     id="extremes.0.level"
-     x="362.19696"
-     y="44.076263"
-     font-size="14"
-     font-family="monospace"
-     fill="red"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.4272px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:0.676273"
-     transform="scale(0.46605827,2.1456544)"><tspan
-       sodipodi:role="line"
-       id="tspan2"
-       x="362.19696"
-       y="44.076263"
-       style="stroke-width:0.676273">{{truncate value 2}}</tspan></text>
-  <text
-     id="extremes.1.level"
-     x="374.19681"
-     y="69.045952"
-     font-size="14"
-     font-family="monospace"
-     fill="red"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.9172px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:0.69924"
-     transform="scale(0.45075015,2.2185239)"
-     inkscape:transform-center-y="-96.232069"
-     inkscape:transform-center-x="-0.00011292873"><tspan
-       sodipodi:role="line"
-       id="tspan2-1"
-       x="374.19681"
-       y="69.045952"
-       style="stroke-width:0.69924">{{truncate value 2}}</tspan></text>
-  <text
-     id="extremes.2.level"
-     x="355.80414"
-     y="99.342102"
-     font-size="14"
-     font-family="monospace"
-     fill="red"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.9855px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:0.702443"
-     transform="scale(0.46793274,2.1370593)"
-     inkscape:transform-center-x="2.7514058"
-     inkscape:transform-center-y="-62.590902"><tspan
-       sodipodi:role="line"
-       id="tspan2-0"
-       x="355.80414"
-       y="99.342102"
-       style="stroke-width:0.702443">{{truncate value 2}}</tspan></text>
+     style="-inkscape-font-specification:'monospace, Normal';font-family:monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:18.6667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ff0000">High Water<desc
+   id="desc2">{{tideLabel extremes.[0]}}</desc></text>
   <text
      id="extremes.1"
      x="5.9322038"
@@ -136,16 +83,8 @@
      font-size="14"
      font-family="monospace"
      fill="black"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ff0000">{{tideLabel value}}</text>
-  <text
-     id="extremes.1.time"
-     x="18.191483"
-     y="63.094311"
-     font-size="14"
-     font-family="monospace"
-     fill="red"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.2155px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:0.572603"
-     transform="scale(0.41115505,2.4321725)">{{formatTime value environment.time.timezoneRegion}}</text>
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ff0000">Low Water<desc
+   id="desc7">{{tideLabel extremes.[1]}}</desc></text>
   <text
      id="extremes.2"
      x="5.9322028"
@@ -153,21 +92,93 @@
      font-size="14"
      font-family="monospace"
      fill="red"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ff0000">{{tideLabel value}}</text>
-  <text
-     id="extremes.2.time"
-     x="11.806269"
-     y="80.29213"
-     font-size="14"
-     font-family="monospace"
-     fill="red"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.4923px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:0.632451"
-     transform="scale(0.37485964,2.6676652)">{{formatTime value environment.time.timezoneRegion}}</text>
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ff0000">High Water<desc
+   id="desc9">{{tideLabel extremes.[2]}}</desc></text>
   <text
      id="environment.time.timezoneRegion"
      x="348.6441"
      y="16.440678"
      font-size="12px"
      font-family="sans-serif"
-     fill="#ffff00">{{value}}</text>
+     fill="#ffff00">UTC+01:00<desc
+   id="desc11">{{utcOffset environment.time.timezoneRegion}}</desc></text>
+  <text
+     id="extremes.2.level"
+     x="173.64978"
+     y="201.8409"
+     font-size="14"
+     font-family="monospace"
+     fill="red"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:1.44101"
+     transform="scale(0.95993086,1.0417417)"
+     inkscape:transform-center-x="11.578901"
+     inkscape:transform-center-y="-62.5909"><tspan
+       sodipodi:role="line"
+       id="tspan2-0"
+       x="173.64978"
+       y="201.8409"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.44101">3.32</tspan><desc
+       id="desc6">{{truncate extremes.[2].level 2}}</desc></text>
+  <text
+     id="extremes.2.time"
+     x="31.471279"
+     y="167.67082"
+     font-size="14"
+     font-family="monospace"
+     fill="red"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:1.31448"
+     transform="scale(0.77910527,1.2835236)">15:53<desc
+   id="desc10">{{formatTime extremes.[2].time environment.time.timezoneRegion}}</desc></text>
+  <text
+     id="extremes.1.level"
+     x="182.71886"
+     y="136.2934"
+     font-size="14"
+     font-family="monospace"
+     fill="red"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:1.40832"
+     transform="scale(0.90784042,1.1015152)"
+     inkscape:transform-center-y="-96.23206"
+     inkscape:transform-center-x="-0.00043342573"><tspan
+       sodipodi:role="line"
+       id="tspan2-1"
+       x="182.71886"
+       y="136.2934"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.40832">1.61</tspan><desc
+       id="desc5">{{truncate extremes.[1].level 2}}</desc></text>
+  <text
+     id="extremes.1.time"
+     x="33.328102"
+     y="121.34362"
+     font-size="14"
+     font-family="monospace"
+     fill="red"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:1.31609"
+     transform="scale(0.77081546,1.2973274)">09:36<desc
+   id="desc8">{{formatTime extremes.[1].time environment.time.timezoneRegion}}</desc></text>
+  <text
+     id="extremes.0.time"
+     x="29.798925"
+     y="79.318893"
+     font-size="14"
+     font-family="monospace"
+     fill="red"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32.0000003px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:1.32646"
+     transform="scale(0.82428215,1.2131768)">03:27<desc
+   id="desc3">{{formatTime extremes.[0].time environment.time.timezoneRegion}}</desc></text>
+  <text
+     id="extremes.0.level"
+     x="173.7571"
+     y="88.424065"
+     font-size="14"
+     font-family="monospace"
+     fill="red"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;stroke-width:1.38653"
+     transform="scale(0.95553785,1.046531)"><tspan
+       sodipodi:role="line"
+       id="tspan2"
+       x="173.7571"
+       y="88.424065"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.38653">3.42</tspan><desc
+       id="desc4">{{truncate extremes.[0].level 2}}</desc></text>
 </svg>
