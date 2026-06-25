@@ -117,8 +117,8 @@
        id="tspan2-0"
        x="173.64978"
        y="201.8409"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.44101">3.32</tspan><desc
-       id="desc6">{{truncate extremes.[2].level 2}}</desc></text>
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.44101">3.3m</tspan><desc
+       id="desc6">{{unitValue extremes.[2].level unitPreferences.length}}</desc></text>
   <text
      id="extremes.2.time"
      x="31.471279"
@@ -144,8 +144,8 @@
        id="tspan2-1"
        x="182.71886"
        y="136.2934"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.40832">1.61</tspan><desc
-       id="desc5">{{truncate extremes.[1].level 2}}</desc></text>
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.40832">1.6m</tspan><desc
+       id="desc5">{{unitValue extremes.[1].level unitPreferences.length}}</desc></text>
   <text
      id="extremes.1.time"
      x="33.328102"
@@ -179,6 +179,6 @@
        id="tspan2"
        x="173.7571"
        y="88.424065"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.38653">3.42</tspan><desc
-       id="desc4">{{truncate extremes.[0].level 2}}</desc></text>
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.38653">3.4m</tspan><desc
+       id="desc4">{{unitValue extremes.[0].level unitPreferences.length}}</desc></text>
 </svg>
