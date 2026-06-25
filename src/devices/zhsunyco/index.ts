@@ -157,11 +157,16 @@ async function getOrDiscoverDevice(adapter: Adapter, address: string, timeoutMs:
   try {
     return await adapter.getDevice(address);
   } catch {
-    await adapter.startDiscovery();
+    const wasDiscovering = await adapter.isDiscovering();
+    if (!wasDiscovering) {
+      await adapter.startDiscovery();
+    }
     try {
       return await adapter.waitDevice(address, timeoutMs);
     } finally {
-      await adapter.stopDiscovery();
+      if (!wasDiscovering) {
+        await adapter.stopDiscovery();
+      }
     }
   }
 }
