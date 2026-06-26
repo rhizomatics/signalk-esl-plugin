@@ -24,7 +24,6 @@ function plugin(app: ServerAPI): Plugin {
   return createPlugin(app);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace plugin {
   export const registerVendorDriver = registerDriver;
   export const getVendorDriver = getDriver;
