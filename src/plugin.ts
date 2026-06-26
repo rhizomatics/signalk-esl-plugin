@@ -61,6 +61,14 @@ function addTidesContextIfDetected(app: ServerAPI): void {
   }, TIDES_DETECT_DELAY_MS);
 }
 
+/** Clears the one-shot "Rescan now" checkbox once the scan it triggered has completed. */
+function clearForceRescan(app: ServerAPI): void {
+  const current = { ...DEFAULT_CONFIG, ...(app.readPluginOptions() as Partial<PluginConfig>) };
+  app.savePluginOptions({ ...current, forceRescan: false }, (err) => {
+    if (err) app.debug(`failed to clear forceRescan: ${err.message}`);
+  });
+}
+
 export function createPlugin(app: ServerAPI): Plugin {
   registerDriver(new ZhsunycoDriver());
 
@@ -69,16 +77,19 @@ export function createPlugin(app: ServerAPI): Plugin {
 
   const plugin: Plugin = {
     id: 'signalk-esl-plugin',
-    name: 'eInk Shelf Label Display',
+    name: 'Display SignalK Data on eInk Electronic Shelf Labels',
     description: 'Renders selected SignalK data to BLE eInk Electronic Shelf Labels',
     schema: () => configSchema(app, lastDiscovered),
     start(config: object) {
       const pluginConfig: PluginConfig = { ...DEFAULT_CONFIG, ...(config as Partial<PluginConfig>) };
       app.debug(`starting with ${pluginConfig.devices.length} configured device(s)`);
 
-      if (pluginConfig.scanOnStart) {
+      if (pluginConfig.scanOnStart || pluginConfig.forceRescan) {
         lastDiscovered.length = 0;
-        runStartupScan(app, lastDiscovered).catch((err) => app.debug(`startup scan failed: ${err.message}`));
+        const scan = runStartupScan(app, lastDiscovered).catch((err) => app.debug(`startup scan failed: ${err.message}`));
+        if (pluginConfig.forceRescan) {
+          scan.then(() => clearForceRescan(app));
+        }
       }
 
       addTidesContextIfDetected(app);
