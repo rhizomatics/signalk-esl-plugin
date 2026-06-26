@@ -63,7 +63,7 @@ program
   .command('vendors')
   .description('List supported vendors and the device models each has confirmed metadata for')
   .action(() => {
-    const header = ['vendor', 'pid', 'hw', 'label', 'size', 'colours'];
+    const header = ['vendor', 'pid', 'hwid', 'label', 'size', 'colours'];
     const rows: string[][] = [];
     for (const driver of allDrivers()) {
       for (const device of driver.supportedDevices()) {
@@ -92,8 +92,8 @@ program
   .description('Scan for supported BLE ESL devices across all registered vendor drivers')
   .option('-d, --duration <seconds>', 'scan duration in seconds', '10')
   .option(
-    '-u, --unmatched',
-    'also list nearby devices no registered driver recognised - address/name/mfr/rssi only, since there\'s no driver to do a vendor-specific read like battery',
+    '-a, --all-devices',
+    'list every nearby BLE device, not just ones a registered driver recognised - unmatched devices show address/name/mfr/rssi only, since there\'s no driver to do a vendor-specific read like battery',
   )
   .action(async (opts) => {
     const durationMs = Number(opts.duration) * 1000;
@@ -114,7 +114,7 @@ program
     if (matchedAddresses.size === 0) {
       console.log(`no devices found in ${opts.duration}s - try a longer scan with -d, e.g. "-d 30"`);
     }
-    if (opts.unmatched) {
+    if (opts.allDevices) {
       const { bluetooth, destroy } = createBluetooth();
       try {
         const adapter = await bluetooth.defaultAdapter();
