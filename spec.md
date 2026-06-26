@@ -9,6 +9,8 @@ A SignalK plugin, in typescript, that renders selected SignalK data to an eInk E
 * Pluggable vendor support
   * Initially for Zhsunyco BLE devices, based on the working Python code in `examples/device_driver`
   * Metadata for devices, identified by PID, for dimensions and colour count
+  * Additional vendors are added by a separate npm package implementing `VendorDriver` and calling the exported `registerVendorDriver` explicitly - no scanning of installed packages. In the SignalK runtime the extension calls it from its own plugin `start()`; the CLI loads it via `esl-cli --require <module>`. Extension packages should declare this package as a `peerDependency` so npm resolves a single shared registry instance
+  * The config schema's vendor enum and the BLE-scan vendor list are both read live from the registry at the point of use (schema build, scan handler) rather than cached, so a newly-registered extension vendor shows up next time the config panel is opened or Scan is pressed - no extra refresh mechanism needed
 * BLE scan to find supported devices and populate a drop-down
 * Ability to register 1 or more devices, and select a template, data source and update frequency plus a friendly name for device
 * Data source will be
