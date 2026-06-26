@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'fs/promises';
 import { Command } from 'commander';
-import { createBluetooth } from 'node-ble';
 import { allDrivers, getDriver, registerDriver } from '../devices/registry';
 import { ZhsunycoDriver } from '../devices/zhsunyco';
-import { getOrDiscoverDevice } from '../devices/bleDiscovery';
+import { createBluetooth, getOrDiscoverDevice } from '../devices/bleDiscovery';
 import { SvgRenderer } from '../render/svgRenderer';
 import { bitmapToPng } from '../render/png';
 

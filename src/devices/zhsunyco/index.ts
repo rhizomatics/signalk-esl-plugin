@@ -1,7 +1,7 @@
-import { createBluetooth, Device } from 'node-ble';
+import { Device } from 'node-ble';
 import { Bitmap } from '../../render/types';
 import { DeviceMetadata, DiscoveredDevice, VendorDeviceConfig, VendorDriver } from '../types';
-import { getOrDiscoverDevice } from '../bleDiscovery';
+import { createBluetooth, getOrDiscoverDevice } from '../bleDiscovery';
 import { ZHSUNYCO_PID_METADATA } from './metadata';
 import { encodeBitmap } from './encode';
 import {
