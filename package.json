@@ -18,7 +18,7 @@
   },
   "signalk":{
     "displayName":"ESL eInk Instruments",
-    "appIcon": "./img/icon-128.png",
+    "appIcon": "/docs/assets/icons/icon_tmp.png",
     "screenshots": [
       "docs/assets/screenshots/example_tidal_clock.png"
     ]
