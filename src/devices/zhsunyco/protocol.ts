@@ -57,15 +57,29 @@ const AES_KEY_LENGTH = 16;
 const AES_CHALLENGE_LENGTH = 16;
 
 /**
- * Encrypts the device's auth challenge with the user-supplied AES-128 key (CBC, zero IV).
+ * Stock BLE auth key shared by Wolink ESL devices out of the box (same bytes as the
+ * reference driver's `BLE_SECRET_KEY`). Used as a fallback when a device hasn't been
+ * given its own key via the plugin config.
+ */
+export const DEFAULT_BLE_AUTH = [
+  155, 96, 159, 40, 188, 73, 226, 87,
+  41, 189, 123, 141, 242, 43, 68, 32,
+];
+
+/** Resolves the configured per-device hex key, falling back to `DEFAULT_BLE_AUTH`. */
+export function resolveAesKey(aesKeyHex?: string): Buffer {
+  return aesKeyHex ? Buffer.from(aesKeyHex, 'hex') : Buffer.from(DEFAULT_BLE_AUTH);
+}
+
+/**
+ * Encrypts the device's auth challenge with the AES-128 key (CBC, zero IV).
  *
  * The reference driver PKCS7-pads the challenge before encrypting and keeps only the
  * first ciphertext block. Since CBC's first output block depends only on the IV and the
  * plaintext's first block, that's equivalent to encrypting the (already block-sized)
  * challenge directly with padding disabled — so we skip the pad-then-truncate round trip.
  */
-export function authResponse(challenge: Buffer, aesKeyHex: string): Buffer {
-  const key = Buffer.from(aesKeyHex, 'hex');
+export function authResponse(challenge: Buffer, key: Buffer): Buffer {
   if (key.length !== AES_KEY_LENGTH) {
     throw new Error(`zhsunyco AES key must be ${AES_KEY_LENGTH} bytes (${AES_KEY_LENGTH * 2} hex chars), got ${key.length}`);
   }

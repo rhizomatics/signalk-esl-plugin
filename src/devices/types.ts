@@ -27,7 +27,7 @@ export interface DiscoveredDevice {
 /** Per-device settings the user supplies when registering a device, beyond what's in DeviceMetadata. */
 export interface VendorDeviceConfig {
   address: string;
-  /** AES key for vendors that need it, entered by the user — never checked into source. */
+  /** AES key for vendors that need it, entered by the user. If omitted, vendors that have one may fall back to a stock/manufacturer-default key instead of failing. */
   aesKey?: string;
 }
 

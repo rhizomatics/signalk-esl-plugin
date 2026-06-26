@@ -1,12 +1,33 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'fs/promises';
 import { Command } from 'commander';
+import { createBluetooth } from 'node-ble';
 import { allDrivers, getDriver, registerDriver } from '../devices/registry';
 import { ZhsunycoDriver } from '../devices/zhsunyco';
+import { getOrDiscoverDevice } from '../devices/bleDiscovery';
 import { SvgRenderer } from '../render/svgRenderer';
 import { bitmapToPng } from '../render/png';
 
 registerDriver(new ZhsunycoDriver());
+
+const VENDOR_IDENTIFY_TIMEOUT_MS = 30_000;
+
+/** Connects long enough to read the advertised name, then matches it against registered drivers. */
+async function identifyVendor(address: string): Promise<string> {
+  const { bluetooth, destroy } = createBluetooth();
+  try {
+    const adapter = await bluetooth.defaultAdapter();
+    const device = await getOrDiscoverDevice(adapter, address, VENDOR_IDENTIFY_TIMEOUT_MS);
+    const name = await device.getName().catch(() => undefined);
+    const driver = allDrivers().find((candidate) => candidate.matchesAdvertisement(name, undefined));
+    if (!driver) {
+      throw new Error(`no registered vendor driver recognises device "${name ?? address}" - specify --vendor explicitly`);
+    }
+    return driver.vendor;
+  } finally {
+    destroy();
+  }
+}
 
 const program = new Command();
 program.name('esl-cli').description('Local CLI for testing ESL device scan and paint without a SignalK server');
@@ -58,17 +79,18 @@ program
 program
   .command('paint')
   .description('Render a template with dummy data and send it to a device')
-  .requiredOption('-v, --vendor <vendor>', 'vendor driver to use')
+  .option('-v, --vendor <vendor>', 'vendor driver to use - if omitted, inferred from the device\'s advertised name')
   .requiredOption('-a, --address <address>', 'BLE address of the device')
   .requiredOption('-t, --template <path>', 'path to SVG template')
   .requiredOption('-d, --data <path>', 'path to JSON data fixture')
-  .requiredOption('-k, --aes-key <hex>', 'AES-128 key for device authentication, as 32 hex characters')
+  .option('-k, --aes-key <hex>', 'AES-128 key for device authentication, as 32 hex characters - defaults to the vendor\'s stock key if omitted')
   .option('-w, --width <px>', 'render width', '416')
   .option('--height <px>', 'render height', '240')
   .action(async (opts) => {
-    const driver = getDriver(opts.vendor);
+    const vendor = opts.vendor ?? (await identifyVendor(opts.address));
+    const driver = getDriver(vendor);
     if (!driver) {
-      throw new Error(`no driver registered for vendor "${opts.vendor}"`);
+      throw new Error(`no driver registered for vendor "${vendor}"`);
     }
     const context = JSON.parse(await readFile(opts.data, 'utf-8'));
     const renderer = new SvgRenderer();

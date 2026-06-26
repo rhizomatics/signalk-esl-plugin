@@ -4,7 +4,7 @@ export interface DeviceConfig {
   friendlyName: string;
   vendor: string;
   address: string;
-  /** User-supplied per vendor driver, e.g. the zhsunyco BLE AES key — never a default/checked-in value. */
+  /** Per-device override; if omitted, the vendor driver may fall back to a stock/manufacturer-default key. */
   aesKey?: string;
   templateName: string;
   dataSourceType: 'signalk-path' | 'api';
@@ -44,7 +44,7 @@ export function configSchema(): object {
             friendlyName: { type: 'string', title: 'Friendly name' },
             vendor: { type: 'string', title: 'Vendor', enum: allDrivers().map((driver) => driver.vendor) },
             address: { type: 'string', title: 'BLE address' },
-            aesKey: { type: 'string', title: 'BLE AES key (vendor-specific, if required)' },
+            aesKey: { type: 'string', title: 'BLE AES key (vendor-specific; leave blank to use the vendor\'s stock default key)' },
             templateName: { type: 'string', title: 'Template file name' },
             dataSourceType: { type: 'string', title: 'Data source type', enum: ['signalk-path', 'api'] },
             signalkPath: { type: 'string', title: 'SignalK path (if data source type is signalk-path)' },

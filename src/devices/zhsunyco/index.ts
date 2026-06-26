@@ -1,6 +1,7 @@
-import { createBluetooth, Adapter, Device } from 'node-ble';
+import { createBluetooth, Device } from 'node-ble';
 import { Bitmap } from '../../render/types';
 import { DeviceMetadata, DiscoveredDevice, VendorDeviceConfig, VendorDriver } from '../types';
+import { getOrDiscoverDevice } from '../bleDiscovery';
 import { ZHSUNYCO_PID_METADATA } from './metadata';
 import { encodeBitmap } from './encode';
 import {
@@ -12,6 +13,7 @@ import {
   commandHeader,
   decodeAdvertisedInfo,
   decodeStatus,
+  resolveAesKey,
 } from './protocol';
 
 /** node-ble has no MTU API; this matches the reference driver's mtu(247)-9 default. */
@@ -81,9 +83,7 @@ export class ZhsunycoDriver implements VendorDriver {
   }
 
   async paint(bitmap: Bitmap, config: VendorDeviceConfig): Promise<void> {
-    if (!config.aesKey) {
-      throw new Error('zhsunyco paint requires an AES key, set per-device in the plugin config');
-    }
+    const aesKey = resolveAesKey(config.aesKey);
 
     const { bluetooth, destroy } = createBluetooth();
     try {
@@ -121,7 +121,7 @@ export class ZhsunycoDriver implements VendorDriver {
         await statusChar.startNotifications();
 
         const challenge = await authChar.readValue();
-        await authChar.writeValueWithoutResponse(authResponse(challenge, config.aesKey));
+        await authChar.writeValueWithoutResponse(authResponse(challenge, aesKey));
         await sleep(AUTH_SETTLE_DELAY_MS);
 
         const pixelData = encodeBitmap(bitmap, metadata);
@@ -149,24 +149,5 @@ async function readAdvertisedInfo(device: Device): Promise<AdvertisedDeviceInfo 
     return bytes ? decodeAdvertisedInfo(bytes) : undefined;
   } catch {
     return undefined;
-  }
-}
-
-/** Uses an already-known device if BlueZ has one cached, otherwise scans until it appears. */
-async function getOrDiscoverDevice(adapter: Adapter, address: string, timeoutMs: number): Promise<Device> {
-  try {
-    return await adapter.getDevice(address);
-  } catch {
-    const wasDiscovering = await adapter.isDiscovering();
-    if (!wasDiscovering) {
-      await adapter.startDiscovery();
-    }
-    try {
-      return await adapter.waitDevice(address, timeoutMs);
-    } finally {
-      if (!wasDiscovering) {
-        await adapter.stopDiscovery();
-      }
-    }
   }
 }
