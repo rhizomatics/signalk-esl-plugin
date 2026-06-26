@@ -14,6 +14,7 @@ const TIDES_DETECT_DELAY_MS = 5_000;
 /** Mirrors signalk-bluetti-plugin's convention: scan briefly, report finds via plugin status for the user to copy-paste. */
 async function runStartupScan(app: ServerAPI, discovered: DiscoveredDevice[], durationSeconds: number): Promise<void> {
   app.setPluginStatus(`Scanning for ESL devices for ${durationSeconds}s...`);
+  const startedAt = Date.now();
   for (const driver of allDrivers()) {
     const devices = await driver.scan(durationSeconds * 1000).catch((err) => {
       app.debug(`${driver.vendor} scan failed: ${err.message}`);
@@ -25,12 +26,13 @@ async function runStartupScan(app: ServerAPI, discovered: DiscoveredDevice[], du
       app.debug(`discovered ${driver.vendor} device "${device.name ?? ''}" [${device.address}] pid=${pid}`);
     }
   }
+  const elapsedSeconds = ((Date.now() - startedAt) / 1000).toFixed(1);
   if (discovered.length === 0) {
-    app.setPluginStatus(`Scan complete - no ESL devices found nearby after ${durationSeconds} seconds.`);
+    app.setPluginStatus(`Scan complete - no ESL devices found nearby after ${elapsedSeconds} seconds.`);
     return;
   }
   const summary = discovered.map((device) => `${device.name ?? device.vendor} [${device.address}]`).join(', ');
-  app.setPluginStatus(`Scan complete - found ${discovered.length} device(s): ${summary} - pick one from a device's "Device" field below`);
+  app.setPluginStatus(`Scan complete - found ${discovered.length} device(s) in ${elapsedSeconds}s: ${summary} - pick one from a device's "Device" field below`);
 }
 
 /**
