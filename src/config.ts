@@ -60,7 +60,7 @@ const BUNDLED_TEMPLATES_DIR = join(__dirname, '..', 'templates');
 /** Defaults that need `app` to compute (the templates dir lives under the SignalK config directory, not this package's install location). */
 export function defaultConfig(app: ServerAPI): PluginConfig {
   return {
-    templatesDir: join(app.getDataDirPath(), 'templates', 'esl'),
+    templatesDir: join(app.getDataDirPath(), 'templates'),
     scanOnStart: true,
     scanDurationSeconds: 15,
     contexts: [],
