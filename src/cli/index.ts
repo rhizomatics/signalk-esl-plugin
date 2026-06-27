@@ -109,26 +109,21 @@ program
     const header = ['vendor', 'address', 'name', 'pid', 'label', 'mfr', 'battery', 'rssi'];
     const rows: string[][] = [];
     const matchedAddresses = new Set<string>();
-    for (const driver of allDrivers()) {
-      logDebug(`scanning for ${driver.vendor} devices for ${durationMs}ms`);
-      const found = await driver.scan(durationMs);
-      logDebug(`${driver.vendor}: found ${found.length} device(s)`);
-      for (const device of found) {
-        matchedAddresses.add(device.address);
-        const pid = device.pid !== undefined ? `0x${device.pid.toString(16).padStart(4, '0')}` : '';
-        const label = device.metadata?.label ?? '';
-        const manufacturerId = device.manufacturerId !== undefined ? `0x${device.manufacturerId.toString(16).padStart(4, '0')}` : '';
-        const battery = device.batteryMv !== undefined ? `${device.batteryMv}mV` : '';
-        rows.push([driver.vendor, device.address, device.name ?? '', pid, label, manufacturerId, battery, String(device.rssi ?? '')]);
+    logDebug(`scanning for ${durationMs}ms`);
+    await withDiscovery(durationMs, async (adapter) => {
+      for (const driver of allDrivers()) {
+        const found = await driver.scan(adapter);
+        logDebug(`${driver.vendor}: found ${found.length} device(s)`);
+        for (const device of found) {
+          matchedAddresses.add(device.address);
+          const pid = device.pid !== undefined ? `0x${device.pid.toString(16).padStart(4, '0')}` : '';
+          const label = device.metadata?.label ?? '';
+          const manufacturerId = device.manufacturerId !== undefined ? `0x${device.manufacturerId.toString(16).padStart(4, '0')}` : '';
+          const battery = device.batteryMv !== undefined ? `${device.batteryMv}mV` : '';
+          rows.push([driver.vendor, device.address, device.name ?? '', pid, label, manufacturerId, battery, String(device.rssi ?? '')]);
+        }
       }
-    }
-    if (matchedAddresses.size === 0) {
-      console.log(`no devices found in ${opts.duration}s - try a longer scan with -d, e.g. "-d 30"`);
-    }
-    if (opts.allDevices) {
-      const { bluetooth, destroy } = createBluetooth();
-      try {
-        const adapter = await bluetooth.defaultAdapter();
+      if (opts.allDevices) {
         for (const address of await adapter.devices()) {
           if (matchedAddresses.has(address)) {
             continue;
@@ -143,9 +138,10 @@ program
             .catch(() => undefined);
           rows.push(['(unmatched)', address, name ?? '', '', '', mfr, '', String(rssi ?? '')]);
         }
-      } finally {
-        destroy();
       }
+    });
+    if (matchedAddresses.size === 0) {
+      console.log(`no devices found in ${opts.duration}s - try a longer scan with -d, e.g. "-d 30"`);
     }
     if (rows.length === 0) {
       return;
