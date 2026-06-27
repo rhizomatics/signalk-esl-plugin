@@ -10,6 +10,7 @@ import { SvgRenderer } from '../render/svgRenderer';
 import { bitmapToPng } from '../render/png';
 import { Binding, findBindings, parseBinding, resolveBinding } from '../render/binding';
 import { applyFormat } from '../render/formatters';
+import { TemplateContext } from '../render/types';
 import { assembleLiveContext } from './liveContext';
 
 registerDriver(new ZhsunycoDriver());
@@ -18,7 +19,7 @@ const VENDOR_IDENTIFY_TIMEOUT_MS = 30_000;
 const DEFAULT_SIGNALK_URL = 'http://localhost:3000';
 
 /** Renders a binding's resolved value the same way `SvgRenderer` does for a `<desc>` (see svgRenderer.ts). */
-function renderBindingValue(binding: Binding, context: import('../render/types').TemplateContext): string {
+function renderBindingValue(binding: Binding, context: TemplateContext): string {
   const value = resolveBinding(binding, context);
   if (binding.format) return applyFormat(binding.format, value, context, binding.round);
   if (typeof value === 'number' && binding.round !== undefined) return value.toFixed(binding.round);
