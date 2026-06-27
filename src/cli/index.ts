@@ -161,11 +161,11 @@ program
 
 program
   .command('paint')
-  .description('Render a template with dummy data and send it to a device')
+  .description('Render a template against a live SignalK server and send it to a device')
   .option('-v, --vendor <vendor>', 'vendor driver to use - if omitted, inferred from the device\'s advertised name')
   .requiredOption('-a, --address <address>', 'BLE address of the device')
   .requiredOption('-t, --template <path>', 'path to SVG template')
-  .requiredOption('-d, --data <path>', 'path to JSON data fixture')
+  .option('-u, --url <url>', 'SignalK server base URL - resolves the template\'s source=signalk/resources bindings', DEFAULT_SIGNALK_URL)
   .option('-k, --aes-key <hex>', 'AES-128 key for device authentication, as 32 hex characters - defaults to the vendor\'s stock key if omitted')
   .option('-w, --width <px>', 'render width', '416')
   .option('--height <px>', 'render height', '240')
@@ -186,7 +186,8 @@ program
           colours: parseColours(opts.colours),
         }
       : undefined;
-    const context = JSON.parse(await readFile(opts.data, 'utf-8'));
+    const bindings = findBindings(await readFile(opts.template, 'utf-8'));
+    const context = await assembleLiveContext(opts.url, bindings);
     const renderer = new SvgRenderer();
     const bitmap = await renderer.render(opts.template, context, Number(opts.width), Number(opts.height));
     await driver.paint(bitmap, { address: opts.address, aesKey: opts.aesKey, modelOverride });
@@ -195,10 +196,10 @@ program
 
 program
   .command('render')
-  .description('Render a template against a JSON data fixture and write a PNG, without needing a device')
+  .description('Render a template against a live SignalK server and write a PNG, without needing a device')
   .requiredOption('-t, --template <path>', 'path to SVG template')
-  .requiredOption('-d, --data <path>', 'path to JSON data fixture')
   .requiredOption('-o, --output <path>', 'output PNG path')
+  .option('-u, --url <url>', 'SignalK server base URL - resolves the template\'s source=signalk/resources bindings', DEFAULT_SIGNALK_URL)
   .option('-w, --width <px>', 'render width', '416')
   .option('--height <px>', 'render height', '240')
   .option(
@@ -207,7 +208,8 @@ program
     (value, previous: string[] = []) => [...previous, value],
   )
   .action(async (opts) => {
-    const context = JSON.parse(await readFile(opts.data, 'utf-8'));
+    const bindings = findBindings(await readFile(opts.template, 'utf-8'));
+    const context = await assembleLiveContext(opts.url, bindings);
     const renderer = opts.font ? new SvgRenderer(opts.font) : new SvgRenderer();
     const bitmap = await renderer.render(opts.template, context, Number(opts.width), Number(opts.height));
     await writeFile(opts.output, bitmapToPng(bitmap));
