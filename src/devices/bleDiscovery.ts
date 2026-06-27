@@ -1,5 +1,9 @@
 import { Adapter, Bluetooth, Device, createBluetooth as createBluetoothImpl } from 'node-ble';
 
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Drop-in replacement for `node-ble`'s `createBluetooth` that fails fast and clearly when
  * BLE isn't available at all, instead of letting `dbus-next` crash the whole process.
@@ -25,6 +29,31 @@ export async function getManufacturerId(device: Device): Promise<number | undefi
   const manufacturerData = await device.getManufacturerData().catch(() => undefined);
   const [key] = Object.keys(manufacturerData ?? {});
   return key === undefined ? undefined : Number(key);
+}
+
+/**
+ * Opens exactly one BLE discovery window and one D-Bus/BlueZ session, then hands the adapter to
+ * `fn` - shared by `plugin.ts`'s startup scan and the CLI's `scan` command so scanning across
+ * multiple registered vendor drivers costs one discovery window total (each driver just enumerates
+ * `adapter.devices()` and identifies its own matches against the same discovered set), not one
+ * window per driver.
+ */
+export async function withDiscovery<T>(durationMs: number, fn: (adapter: Adapter) => Promise<T>): Promise<T> {
+  const { bluetooth, destroy } = createBluetooth();
+  try {
+    const adapter = await bluetooth.defaultAdapter();
+    const wasDiscovering = await adapter.isDiscovering();
+    if (!wasDiscovering) {
+      await adapter.startDiscovery();
+    }
+    await sleep(durationMs);
+    if (!wasDiscovering) {
+      await adapter.stopDiscovery();
+    }
+    return await fn(adapter);
+  } finally {
+    destroy();
+  }
 }
 
 /** Uses an already-known device if BlueZ has one cached, otherwise scans until it appears. */

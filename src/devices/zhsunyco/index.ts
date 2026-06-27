@@ -1,7 +1,7 @@
-import { Device } from 'node-ble';
+import { Adapter, Device } from 'node-ble';
 import { Bitmap } from '../../render/types';
 import { DeviceMetadata, DiscoveredDevice, VendorDeviceConfig, VendorDriver } from '../types';
-import { createBluetooth, getOrDiscoverDevice } from '../bleDiscovery';
+import { createBluetooth, getOrDiscoverDevice, sleep } from '../bleDiscovery';
 import { ZHSUNYCO_PID_METADATA } from './metadata';
 import { encodeBitmap } from './encode';
 import {
@@ -25,10 +25,6 @@ const AUTH_SETTLE_DELAY_MS = 500;
 const STATUS_WAIT_TIMEOUT_MS = 60_000;
 const DEVICE_DISCOVERY_TIMEOUT_MS = 30_000;
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export class ZhsunycoDriver implements VendorDriver {
   readonly vendor = 'zhsunyco';
 
@@ -45,49 +41,34 @@ export class ZhsunycoDriver implements VendorDriver {
     return ZHSUNYCO_PID_METADATA;
   }
 
-  async scan(durationMs: number): Promise<DiscoveredDevice[]> {
-    const { bluetooth, destroy } = createBluetooth();
-    try {
-      const adapter = await bluetooth.defaultAdapter();
-      const wasDiscovering = await adapter.isDiscovering();
-      if (!wasDiscovering) {
-        await adapter.startDiscovery();
-      }
-      await sleep(durationMs);
-      if (!wasDiscovering) {
-        await adapter.stopDiscovery();
+  async scan(adapter: Adapter): Promise<DiscoveredDevice[]> {
+    const found: DiscoveredDevice[] = [];
+    for (const address of await adapter.devices()) {
+      const device = await adapter.getDevice(address);
+      const name = await device.getName().catch(() => undefined);
+      const manufacturerData = await device.getManufacturerData().catch(() => undefined);
+      const manufacturerId = manufacturerData ? Number(Object.keys(manufacturerData)[0]) : undefined;
+      if (!this.matchesAdvertisement(name, manufacturerId)) {
+        continue;
       }
 
-      const found: DiscoveredDevice[] = [];
-      for (const address of await adapter.devices()) {
-        const device = await adapter.getDevice(address);
-        const name = await device.getName().catch(() => undefined);
-        const manufacturerData = await device.getManufacturerData().catch(() => undefined);
-        const manufacturerId = manufacturerData ? Number(Object.keys(manufacturerData)[0]) : undefined;
-        if (!this.matchesAdvertisement(name, manufacturerId)) {
-          continue;
-        }
-
-        const advertisedInfo = manufacturerData ? decodeAdvertisedInfo(Object.values(manufacturerData)[0]) : undefined;
-        const { info, batteryMv } = await readDeviceDetails(device, advertisedInfo);
-        found.push({
-          address,
-          name,
-          vendor: this.vendor,
-          pid: info?.pid,
-          metadata: info ? this.metadataForPid(info.pid, info.hwVersion) : undefined,
-          manufacturerId,
-          batteryMv,
-          rssi: await device
-            .getRSSI()
-            .then((value) => (value === undefined ? undefined : Number(value)))
-            .catch(() => undefined),
-        });
-      }
-      return found;
-    } finally {
-      destroy();
+      const advertisedInfo = manufacturerData ? decodeAdvertisedInfo(Object.values(manufacturerData)[0]) : undefined;
+      const { info, batteryMv } = await readDeviceDetails(device, advertisedInfo);
+      found.push({
+        address,
+        name,
+        vendor: this.vendor,
+        pid: info?.pid,
+        metadata: info ? this.metadataForPid(info.pid, info.hwVersion) : undefined,
+        manufacturerId,
+        batteryMv,
+        rssi: await device
+          .getRSSI()
+          .then((value) => (value === undefined ? undefined : Number(value)))
+          .catch(() => undefined),
+      });
     }
+    return found;
   }
 
   async paint(bitmap: Bitmap, config: VendorDeviceConfig): Promise<void> {
