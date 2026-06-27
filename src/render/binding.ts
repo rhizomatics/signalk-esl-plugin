@@ -125,15 +125,41 @@ export function resolveBinding(binding: Binding, context: TemplateContext): unkn
 }
 
 /**
+ * Looks up a `signalk`-sourced binding's path in `context.meta` (mirrors `context.signalk`'s shape -
+ * see `assembleRawContext` in repaintScheduler.ts / `assembleLiveContext` in cli/liveContext.ts).
+ * Unlike `resolveBinding`, never throws - metadata is always best-effort (a `source=resources` binding,
+ * an older server with no `/meta` endpoint, or simply a path with no metadata registered all resolve
+ * to "no metadata" rather than an error).
+ */
+function resolveDisplayUnits(binding: Binding, context: TemplateContext): DisplayUnits | undefined {
+  if (binding.source !== 'signalk') return undefined;
+  const meta = context.meta as Record<string, unknown> | undefined;
+  const vessel = meta?.[binding.context];
+  if (vessel === undefined) return undefined;
+  const metadata = getAtPath(vessel, binding.path) as { displayUnits?: DisplayUnits } | undefined;
+  return metadata?.displayUnits;
+}
+
+/**
  * Resolves a binding and renders it to text exactly as `SvgRenderer` does for a `<desc>` - shared so
- * the CLI's `field`/`fields` commands show the same thing a real render would. Falls back to
- * `JSON.stringify` for an unformatted object/array value (e.g. a path that resolved to a whole
- * sub-tree rather than a leaf) instead of the useless `String(value)` -> `"[object Object]"`.
+ * the CLI's `field`/`fields` commands show the same thing a real render would.
+ *
+ * A numeric `signalk`-sourced value auto-converts to its path's preferred display unit (from
+ * `context.meta`) by default - `format=raw` opts out. An explicit named `format=` (anything other
+ * than `raw`) always takes precedence. Resource-sourced numbers have no per-path metadata, so they
+ * always show the raw value (still subject to `round=`).
+ *
+ * Falls back to `JSON.stringify` for an unformatted object/array value (e.g. a path that resolved to a
+ * whole sub-tree rather than a leaf) instead of the useless `String(value)` -> `"[object Object]"`.
  */
 export function renderBinding(binding: Binding, context: TemplateContext): string {
   const value = resolveBinding(binding, context);
-  if (binding.format) return applyFormat(binding.format, value, context, binding.round);
-  if (typeof value === 'number' && binding.round !== undefined) return value.toFixed(binding.round);
+  if (binding.format && binding.format !== 'raw') return applyFormat(binding.format, value, context, binding.round);
+  if (typeof value === 'number') {
+    const displayUnits = binding.format === 'raw' ? undefined : resolveDisplayUnits(binding, context);
+    if (displayUnits) return formatDisplayUnits(value, displayUnits, binding.round);
+    if (binding.round !== undefined) return value.toFixed(binding.round);
+  }
   if (value === null || value === undefined) return '';
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);

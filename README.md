@@ -46,6 +46,8 @@ To get fast feedback on templates and shelf devices without updating and configu
 
 - `vendors` - list supported vendors
 - `scan` - report supported devices found from a BLE scan
+
+See also the commands useful for debugging under [Developing Templates]
 - `render` - transform an SVG template and data into a PNG
 - `paint` - render an SVG template and data to a selected ESL
 
@@ -56,7 +58,7 @@ To get fast feedback on templates and shelf devices without updating and configu
 Also known as 'Suny'
 
 - [BLE ESLs](https://www.zhsunyco.com/digital-display-solution-for-small-retail-business/ble-esl-solution/)
-  - The range of labels available on retail sites like Aliexpress may be larger than on their corporate site
+  - The range of labels available on retail sites like AliExpress may be larger than on their corporate site
   - In mid 2026, a 4 colour (BWRY) 3.7" label retailed for about $35, with quantity discounts for bulk sets
   - Cheapest units are 2 colour 1.54", and they go up to 7.5"
 
@@ -83,7 +85,7 @@ Additional vendors and devices can be added by a separate npm package that imple
 - In the SignalK runtime, call this from the extension's own plugin `start()`. In the CLI, load the extension with `esl-cli --require <module> <command>`.
 - Declare this package as a `peerDependency` (not a regular dependency) in the extension package, so npm resolves a single shared copy of the registry.
 
-#### Templates
+#### Developing Templates
 
 Templates can be added to the configurable directory. [Inkscape](https://inkscape.org) free, open source, and recommended for editing templates, or your own favourite editor, or by hand in a text editor for hard core (or just tidying up the template side).
 
