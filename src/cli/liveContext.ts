@@ -2,6 +2,7 @@ import { Binding } from '../render/binding';
 import { TemplateContext } from '../render/types';
 import { fetchJson } from '../httpJson';
 import { fetchCategoryDisplayUnits } from '../unitCategories';
+import { fetchPathMeta } from '../pathMeta';
 import { logDebug } from './log';
 
 const RESOURCES_API_PATH = '/signalk/v2/api/resources';
@@ -35,10 +36,11 @@ function unwrapSignalkTree(node: unknown): unknown {
 
 /**
  * CLI counterpart to `assembleRawContext` in repaintScheduler.ts - same `{ signalk, resources,
- * categories }` shape, but fetched entirely over plain HTTP (the CLI has no live `ServerAPI` to call
- * `getSelfPath`/`getPath`/`resourcesApi` on) against a real or test SignalK server's REST API. Fetches
- * each referenced context's/resource's *whole* subtree once and lets the existing binding resolver
- * navigate `path` within it.
+ * pathMeta, categories }` shape, but fetched entirely over plain HTTP (the CLI has no live `ServerAPI`
+ * to call `getSelfPath`/`getPath`/`resourcesApi` on, and per-path metadata/`category=` resolution has
+ * no in-process equivalent at all - see `repaintScheduler.ts`) against a real or test SignalK server's
+ * REST API. Fetches each referenced context's/resource's *whole* subtree once and lets the existing
+ * binding resolver navigate `path` within it.
  */
 export async function assembleLiveContext(signalkUrl: string, bindings: Binding[]): Promise<TemplateContext> {
   const signalk: Record<string, unknown> = {};
@@ -47,6 +49,16 @@ export async function assembleLiveContext(signalkUrl: string, bindings: Binding[
     const url = `${signalkUrl}/signalk/v1/api/${contextPath(context)}`;
     logDebug(`GET ${url}`);
     signalk[context] = unwrapSignalkTree(await fetchJson(url));
+  }
+
+  const pathMeta: Record<string, unknown> = {};
+  for (const context of contexts) {
+    try {
+      logDebug(`GET ${signalkUrl}/signalk/v1/api/${contextPath(context)}/meta`);
+      pathMeta[context] = await fetchPathMeta(signalkUrl, context);
+    } catch (err) {
+      console.error(`warning: could not fetch path metadata for context "${context}" (${(err as Error).message}) - automatic unit conversion will show raw values`);
+    }
   }
 
   const resources: Record<string, unknown> = {};
@@ -60,5 +72,5 @@ export async function assembleLiveContext(signalkUrl: string, bindings: Binding[
   const categoryNames = new Set(bindings.filter((binding) => binding.category).map((binding) => binding.category as string));
   const categories = await fetchCategoryDisplayUnits(signalkUrl, categoryNames);
 
-  return { signalk, resources, categories };
+  return { signalk, resources, pathMeta, categories };
 }

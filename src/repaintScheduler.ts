@@ -66,10 +66,13 @@ function setAtPath(target: Record<string, unknown>, path: string, value: unknown
 /**
  * Reads live data for exactly what a template's own bindings ask for - no separate config declaring it.
  * `signalk`-sourced bindings are read directly (`self` via `getSelfPath`, anything else via `getPath`
- * against that literal SignalK context). `resources`-sourced bindings go through `app.resourcesApi` -
- * both in-process, like `getSelfPath`/`getPath`, so (unlike the CLI's HTTP-based equivalent in
- * `cli/liveContext.ts`) no URL is needed for either. An explicit `category=` binding is the one case
- * with no in-process equivalent - `apiUrl` is only needed for those (see `fetchCategoryDisplayUnits`).
+ * against that literal SignalK context) - in-process, no URL needed. `resources`-sourced bindings go
+ * through `app.resourcesApi`, in-process too. Per-path unit-conversion metadata (`pathMeta`, for
+ * automatic conversion - see `renderBinding`) and an explicit `category=` binding's resolved
+ * conversion both have no in-process equivalent (confirmed against the signalk-server source - that
+ * resolution only happens in its REST layer), so both need `apiUrl` - fetching `pathMeta` is
+ * best-effort (a missing/unreachable server just means no automatic conversion), but a `category=`
+ * binding is a declared dependency, so a missing `apiUrl` is a hard error there.
  */
 async function assembleRawContext(app: ServerAPI, apiUrl: string | undefined, bindings: Binding[]): Promise<TemplateContext> {
   const signalk: Record<string, unknown> = {};
@@ -84,6 +87,18 @@ async function assembleRawContext(app: ServerAPI, apiUrl: string | undefined, bi
     setAtPath(namespace, binding.path, value);
   }
   signalk.self ??= {};
+
+  const pathMeta: Record<string, unknown> = {};
+  const signalkContexts = new Set(bindings.filter((binding) => binding.source === 'signalk').map((binding) => binding.context));
+  if (apiUrl) {
+    for (const ctx of signalkContexts) {
+      try {
+        pathMeta[ctx] = await fetchPathMeta(apiUrl, ctx);
+      } catch (err) {
+        app.debug(`could not fetch path metadata for context "${ctx}" (${(err as Error).message}) - automatic unit conversion will show raw values`);
+      }
+    }
+  }
 
   const resources: Record<string, unknown> = {};
   const resourceNames = new Set(bindings.filter((binding) => binding.source === 'resources').map((binding) => binding.resource as string));
@@ -101,7 +116,7 @@ async function assembleRawContext(app: ServerAPI, apiUrl: string | undefined, bi
   }
   const categories = apiUrl ? await fetchCategoryDisplayUnits(apiUrl, categoryNames) : {};
 
-  return { signalk, resources, categories };
+  return { signalk, resources, pathMeta, categories };
 }
 
 function clearForceRepaint(app: ServerAPI, friendlyName: string): void {
