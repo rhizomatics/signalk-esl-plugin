@@ -59,6 +59,7 @@ export class ZhsunycoDriver implements VendorDriver {
         name,
         vendor: this.vendor,
         pid: info?.pid,
+        hwVersion: info?.hwVersion,
         metadata: info ? this.metadataForPid(info.pid, info.hwVersion) : undefined,
         manufacturerId,
         batteryMv,

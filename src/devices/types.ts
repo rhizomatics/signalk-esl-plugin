@@ -27,6 +27,13 @@ export interface DiscoveredDevice {
   name?: string;
   vendor: string;
   pid?: number;
+  /**
+   * The advertised hardware-version disambiguator, captured independently of whether `metadata`
+   * lookup succeeded - lets `deviceOptions()` (`config.ts`) build a complete, parseable device token
+   * even for a PID a driver doesn't recognise yet, instead of losing it because it was only ever
+   * read off of `metadata.hwVersion`.
+   */
+  hwVersion?: string;
   metadata?: DeviceMetadata;
   rssi?: number;
   /** BLE manufacturer ID (the key of the advertisement's manufacturer data), if advertised. */

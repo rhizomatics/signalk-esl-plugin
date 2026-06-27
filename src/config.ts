@@ -67,10 +67,12 @@ export function defaultConfig(app: ServerAPI): PluginConfig {
 }
 
 /**
- * Enum for the combined "device" field, built from recently scanned devices (only ones a
- * registered driver actually recognised - an unrecognised model can't be painted) plus,
- * as a fallback, whatever's already saved so an existing selection doesn't vanish from the
- * dropdown just because this particular run hasn't re-scanned it yet.
+ * Enum for the combined "device" field, built from recently scanned devices - including ones a
+ * driver identified as its vendor but whose PID isn't in its metadata table yet (clearly labelled,
+ * so the user can at least see what was found and report the PID; repainting such a device still
+ * does nothing without a model override, since there's no width/height to render with) - plus, as a
+ * fallback, whatever's already saved so an existing selection doesn't vanish from the dropdown just
+ * because this particular run hasn't re-scanned it yet.
  */
 function deviceOptions(discovered: DiscoveredDevice[], current: PluginConfig): { values: string[]; labels: string[] } {
   const values: string[] = [];
@@ -78,17 +80,20 @@ function deviceOptions(discovered: DiscoveredDevice[], current: PluginConfig): {
   const seen = new Set<string>();
 
   for (const found of discovered) {
-    if (!found.metadata) {
+    if (found.pid === undefined) {
       continue;
     }
-    const modelToken = [found.vendor, found.pid, found.metadata.hwVersion].filter((part) => part !== undefined).join(':');
+    const modelToken = [found.vendor, found.pid, found.hwVersion].filter((part) => part !== undefined).join(':');
     const value = `${modelToken}@${found.address}`;
     if (seen.has(value)) {
       continue;
     }
     seen.add(value);
     values.push(value);
-    labels.push(`${found.vendor} ${found.metadata.label} (${found.address})`);
+    const label = found.metadata
+      ? `${found.vendor} ${found.metadata.label} (${found.address})`
+      : `${found.vendor} unrecognised PID 0x${found.pid.toString(16).padStart(4, '0')} (${found.address})`;
+    labels.push(label);
   }
 
   for (const device of current.devices) {
