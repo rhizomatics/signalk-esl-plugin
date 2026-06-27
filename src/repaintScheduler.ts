@@ -6,7 +6,6 @@ import { DeviceConfig, PluginConfig, parseDevice, resolveTemplatePath } from './
 import { getDriver } from './devices/registry';
 import { SvgRenderer } from './render/svgRenderer';
 import { Binding, findBindings } from './render/binding';
-import { DisplayUnits } from './render/formatters';
 import { TemplateContext } from './render/types';
 import { fetchCategoryDisplayUnits } from './unitCategories';
 
@@ -66,16 +65,13 @@ function setAtPath(target: Record<string, unknown>, path: string, value: unknown
 /**
  * Reads live data for exactly what a template's own bindings ask for - no separate config declaring it.
  * `signalk`-sourced bindings are read directly (`self` via `getSelfPath`, anything else via `getPath`
- * against that literal SignalK context), with each `self` path's `displayUnits` metadata (if any)
- * fetched alongside it via `app.getMetadata` into `pathMeta` for `renderBinding`'s automatic unit
- * conversion - both in-process, like `getSelfPath`/`getPath`, so unlike the CLI's HTTP-based equivalent
- * in `cli/liveContext.ts`, no URL is needed for either. `resources`-sourced bindings go through
- * `app.resourcesApi`, in-process too. An explicit `category=` binding is the one case with no
- * in-process equivalent - `apiUrl` is only needed for those (see `fetchCategoryDisplayUnits`).
+ * against that literal SignalK context). `resources`-sourced bindings go through `app.resourcesApi` -
+ * both in-process, like `getSelfPath`/`getPath`, so (unlike the CLI's HTTP-based equivalent in
+ * `cli/liveContext.ts`) no URL is needed for either. An explicit `category=` binding is the one case
+ * with no in-process equivalent - `apiUrl` is only needed for those (see `fetchCategoryDisplayUnits`).
  */
 async function assembleRawContext(app: ServerAPI, apiUrl: string | undefined, bindings: Binding[]): Promise<TemplateContext> {
   const signalk: Record<string, unknown> = {};
-  const pathMeta: Record<string, unknown> = {};
   const seenSignalk = new Set<string>();
   for (const binding of bindings) {
     if (binding.source !== 'signalk') continue;
@@ -85,14 +81,6 @@ async function assembleRawContext(app: ServerAPI, apiUrl: string | undefined, bi
     const value = binding.context === 'self' ? app.getSelfPath(binding.path) : app.getPath(`${binding.context}.${binding.path}`);
     const namespace = (signalk[binding.context] ??= {}) as Record<string, unknown>;
     setAtPath(namespace, binding.path, value);
-
-    if (binding.context === 'self') {
-      const displayUnits = (app.getMetadata(binding.path) as { displayUnits?: DisplayUnits } | undefined)?.displayUnits;
-      if (displayUnits) {
-        const metaNamespace = (pathMeta.self ??= {}) as Record<string, unknown>;
-        setAtPath(metaNamespace, binding.path, { displayUnits });
-      }
-    }
   }
   signalk.self ??= {};
 
@@ -112,7 +100,7 @@ async function assembleRawContext(app: ServerAPI, apiUrl: string | undefined, bi
   }
   const categories = apiUrl ? await fetchCategoryDisplayUnits(apiUrl, categoryNames) : {};
 
-  return { signalk, resources, pathMeta, categories };
+  return { signalk, resources, categories };
 }
 
 function clearForceRepaint(app: ServerAPI, friendlyName: string): void {

@@ -15,9 +15,9 @@ export interface Binding {
   /** Required when `source === 'resources'` - the Resources API resource type, e.g. `tides`, `waypoints`. */
   resource?: string;
   path: string;
-  /** A named formatter (see `./formatters.ts`), or `'raw'` to suppress metadata-driven auto unit-conversion (see `renderBinding`). */
+  /** A named formatter (see `./formatters.ts`) - `local_time`, `utc_offset`, `position`. */
   format?: string;
-  /** Explicit unit-preferences category (e.g. `depth`, `speed`, `temperature`) for a numeric value with no per-path metadata to auto-convert from, e.g. a `source=resources` value - see `../unitCategories.ts`. */
+  /** Explicit unit-preferences category (e.g. `depth`, `speed`, `temperature`) for a numeric value - see `../unitCategories.ts`. */
   category?: string;
   round?: number;
 }
@@ -27,11 +27,10 @@ const KNOWN_KEYS = new Set(['source', 'context', 'resource', 'path', 'format', '
 /**
  * Parses a `<desc>` element's text content into a `Binding`, e.g.
  * `source=resources,resource=tides,path=extremes.[0].level,category=depth,round=2` or, using the
- * defaults (`source=signalk,context=self`), plain `path=navigation.speedOverGround` (auto-converts via
- * that path's own metadata - see `renderBinding`). A bare path with no `key=value` pairs at all, e.g.
- * `environment.forecast.description`, is shorthand for `path=environment.forecast.description`
- * (source/context still default to signalk/self) - SignalK paths never contain `=`, so its absence
- * unambiguously signals this shorthand.
+ * defaults (`source=signalk,context=self`), plain `path=navigation.speedOverGround,category=speed`.
+ * A bare path with no `key=value` pairs at all, e.g. `environment.forecast.description`, is shorthand
+ * for `path=environment.forecast.description` (source/context still default to signalk/self) - SignalK
+ * paths never contain `=`, so its absence unambiguously signals this shorthand.
  */
 export function parseBinding(desc: string): Binding {
   const trimmedDesc = desc.trim();
@@ -129,27 +128,9 @@ export function resolveBinding(binding: Binding, context: TemplateContext): unkn
 }
 
 /**
- * Looks up a `signalk`-sourced binding's path in `context.pathMeta` (mirrors `context.signalk`'s shape
- * - see `assembleRawContext` in repaintScheduler.ts / `assembleLiveContext` in cli/liveContext.ts).
- * Named distinctly from `context.meta` (the plugin-injected repaint timestamp, unrelated). Unlike
- * `resolveBinding`, never throws - metadata is always best-effort (a `source=resources` binding, an
- * older server with no `/meta` endpoint, or simply a path with no metadata registered all resolve to
- * "no metadata" rather than an error).
- */
-function resolveDisplayUnits(binding: Binding, context: TemplateContext): DisplayUnits | undefined {
-  if (binding.source !== 'signalk') return undefined;
-  const pathMeta = context.pathMeta as Record<string, unknown> | undefined;
-  const vessel = pathMeta?.[binding.context];
-  if (vessel === undefined) return undefined;
-  const metadata = getAtPath(vessel, binding.path) as { displayUnits?: DisplayUnits } | undefined;
-  return metadata?.displayUnits;
-}
-
-/**
  * Looks up an explicit `category=` binding's resolved conversion info from `context.categories` (built
- * by `fetchCategoryDisplayUnits` in `../unitCategories.ts`). Unlike `resolveDisplayUnits`, this *is* a
- * required dependency once a binding names a category - same throw-on-missing pattern as
- * `resolveBinding`'s context/resource lookups.
+ * by `fetchCategoryDisplayUnits` in `../unitCategories.ts`) - same throw-on-missing pattern as
+ * `resolveBinding`'s context/resource lookups, since naming a category is a declared dependency.
  */
 function resolveCategoryDisplayUnits(binding: Binding, context: TemplateContext): DisplayUnits {
   const categories = context.categories as Record<string, DisplayUnits> | undefined;
@@ -164,23 +145,17 @@ function resolveCategoryDisplayUnits(binding: Binding, context: TemplateContext)
  * Resolves a binding and renders it to text exactly as `SvgRenderer` does for a `<desc>` - shared so
  * the CLI's `field`/`fields` commands show the same thing a real render would.
  *
- * Precedence for a numeric value:
- * 1. An explicit named `format=` (anything other than `raw`) - `local_time`/`utc_offset`/`position`.
- * 2. An explicit `category=` - for values with no per-path metadata to convert from, e.g. a
- *    `source=resources` value.
- * 3. Otherwise, a `signalk`-sourced value auto-converts to its path's own preferred display unit (from
- *    `context.pathMeta`) by default - `format=raw` opts out of this step only.
- * 4. Falls through to `round=` (`toFixed`), `JSON.stringify` for an unformatted object/array value
- *    (e.g. a path that resolved to a whole sub-tree rather than a leaf) instead of the useless
- *    `String(value)` -> `"[object Object]"`, else `String`.
+ * A named `format=` (`local_time`/`utc_offset`/`position`) takes precedence; otherwise a numeric value
+ * with an explicit `category=` (e.g. `category=depth` on a `source=resources` value) converts via that
+ * category's resolved unit preference. Falls through to `round=` (`toFixed`), `JSON.stringify` for an
+ * unformatted object/array value (e.g. a path that resolved to a whole sub-tree rather than a leaf)
+ * instead of the useless `String(value)` -> `"[object Object]"`, else `String`.
  */
 export function renderBinding(binding: Binding, context: TemplateContext): string {
   const value = resolveBinding(binding, context);
-  if (binding.format && binding.format !== 'raw') return applyFormat(binding.format, value, context, binding.round);
+  if (binding.format) return applyFormat(binding.format, value, context, binding.round);
   if (typeof value === 'number') {
     if (binding.category) return formatDisplayUnits(value, resolveCategoryDisplayUnits(binding, context), binding.round);
-    const displayUnits = binding.format === 'raw' ? undefined : resolveDisplayUnits(binding, context);
-    if (displayUnits) return formatDisplayUnits(value, displayUnits, binding.round);
     if (binding.round !== undefined) return value.toFixed(binding.round);
   }
   if (value === null || value === undefined) return '';
