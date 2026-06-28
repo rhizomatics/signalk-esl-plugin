@@ -10,6 +10,7 @@
   "files": [
     "dist",
     "templates",
+    "docs",
     "CHANGELOG.md",
     "README.md"
   ],
@@ -21,7 +22,7 @@
   },
   "signalk":{
     "displayName":"eInk Label Instruments",
-    "appIcon": "/docs/assets/icons/icon_tmp.png",
+    "appIcon": "docs/assets/icons/icon_tmp.png",
     "screenshots": [
       "docs/assets/screenshots/example_tidal_clock.png"
     ]
