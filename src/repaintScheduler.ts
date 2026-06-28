@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { join } from 'path';
 import { readFileSync, writeFileSync } from 'fs';
 import { ServerAPI, Path, SignalKResourceType } from '@signalk/server-api';
-import { DeviceConfig, PluginConfig, parseDevice, resolveTemplatePath } from './config';
+import { DeviceConfig, PluginConfig, parseDevice, resolveTemplatePath, resolveTemplatesDir } from './config';
 import { getDriver } from './devices/registry';
 import { SvgRenderer } from './render/svgRenderer';
 import { Binding, findBindings } from './render/binding';
@@ -144,7 +144,7 @@ async function considerRepaint(
     app.debug(`"${device.friendlyName}": no driver/metadata for device "${device.device}", skipping`);
     return;
   }
-  const templatePath = resolveTemplatePath(config.templatesDir, device.templateName);
+  const templatePath = resolveTemplatePath(resolveTemplatesDir(config.templatesDir), device.templateName);
   const bindings = findBindings(readFileSync(templatePath, 'utf-8'));
 
   const apiUrl = await getApiUrl().catch((err) => {

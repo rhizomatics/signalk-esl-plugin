@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { homedir } from 'os';
+import { isAbsolute, join } from 'path';
 import { ServerAPI } from '@signalk/server-api';
 import { allDrivers } from './devices/registry';
 import { DiscoveredDevice } from './devices/types';
@@ -28,7 +29,11 @@ export interface DeviceConfig {
 }
 
 export interface PluginConfig {
-  /** Directory the plugin scans for template files, instead of an upload UI. */
+  /**
+   * Directory the plugin scans for template files, instead of an upload UI - follows
+   * signalk-parquet's convention: empty for the default, a relative path resolved against
+   * `~/.signalk`, or an absolute path. Use `resolveTemplatesDir` to turn this into an actual path.
+   */
   templatesDir: string;
   /** Run a short BLE scan on plugin start and report discoveries via plugin status, like signalk-bluetti-plugin does. */
   scanOnStart: boolean;
@@ -56,14 +61,30 @@ export interface PluginConfig {
 /** The package's own bundled `templates/` directory (ships alongside `dist/`, see package.json's `files`) - templates here are always available, but a same-named template in the user's `templatesDir` takes priority. */
 const BUNDLED_TEMPLATES_DIR = join(__dirname, '..', 'templates');
 
-/** Defaults that need `app` to compute (the templates dir lives under the SignalK config directory, not this package's install location). */
-export function defaultConfig(app: ServerAPI): PluginConfig {
+const SIGNALK_HOME_DIR = join(homedir(), '.signalk');
+const DEFAULT_TEMPLATES_DIR = join(SIGNALK_HOME_DIR, 'esl', 'templates');
+
+export function defaultConfig(): PluginConfig {
   return {
-    templatesDir: join(app.getDataDirPath(), 'templates'),
+    templatesDir: '',
     scanOnStart: true,
     scanDurationSeconds: 20,
     devices: [],
   };
+}
+
+/**
+ * Resolves the user-facing `templatesDir` setting to an actual directory, mirroring
+ * signalk-parquet's `outputDirectory` convention: empty means the default location, a relative
+ * path is resolved against `~/.signalk` (where SignalK itself stores its config by default), and
+ * an absolute path is used as-is.
+ */
+export function resolveTemplatesDir(templatesDir: string | undefined): string {
+  const trimmed = templatesDir?.trim();
+  if (!trimmed) {
+    return DEFAULT_TEMPLATES_DIR;
+  }
+  return isAbsolute(trimmed) ? trimmed : join(SIGNALK_HOME_DIR, trimmed);
 }
 
 /**
@@ -141,7 +162,7 @@ function withEnum<T extends object>(schema: T, values: string[], names?: string[
 }
 
 export function configSchema(app: ServerAPI, discovered: DiscoveredDevice[] = []): object {
-  const defaults = defaultConfig(app);
+  const defaults = defaultConfig();
   const current = { ...defaults, ...(app.readPluginOptions() as Partial<PluginConfig>) };
   const { values: deviceValues, labels: deviceLabels } = deviceOptions(discovered, current);
 
@@ -151,7 +172,10 @@ export function configSchema(app: ServerAPI, discovered: DiscoveredDevice[] = []
       templatesDir: {
         type: 'string',
         title: 'Templates directory',
-        description: 'Directory to search for local SVG template files - a template here with the same name as a bundled one takes priority.',
+        description:
+          `Relative path from ~/.signalk (e.g., "esl/templates" becomes ~/.signalk/esl/templates). ` +
+          `Leave empty for default (${DEFAULT_TEMPLATES_DIR}). Absolute paths also supported. A template here ` +
+          'with the same name as a bundled one takes priority.',
         default: defaults.templatesDir,
       },
       scanOnStart: {
@@ -192,7 +216,7 @@ export function configSchema(app: ServerAPI, discovered: DiscoveredDevice[] = []
               deviceLabels,
             ),
 
-            templateName: withEnum({ type: 'string', title: 'Template' }, templateNameOptions(current.templatesDir)),
+            templateName: withEnum({ type: 'string', title: 'Template' }, templateNameOptions(resolveTemplatesDir(current.templatesDir))),
             repaintTrigger: { type: 'string', title: 'Repaint trigger', enum: ['subscription', 'interval'] },
             triggerPath: { type: 'string', title: 'Trigger SignalK path (if repaint trigger is subscription)' },
             intervalHours: { type: 'number', title: 'Repaint every N hours (if repaint trigger is interval)', minimum: 1 },

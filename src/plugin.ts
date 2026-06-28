@@ -61,7 +61,7 @@ export function createPlugin(app: ServerAPI): Plugin {
     schema: () => configSchema(app, lastDiscovered),
     uiSchema: () => configUiSchema(),
     start(config: object) {
-      const pluginConfig: PluginConfig = { ...defaultConfig(app), ...(config as Partial<PluginConfig>) };
+      const pluginConfig: PluginConfig = { ...defaultConfig(), ...(config as Partial<PluginConfig>) };
       app.debug(`starting with ${pluginConfig.devices.length} configured device(s)`);
 
       if (pluginConfig.scanOnStart) {
