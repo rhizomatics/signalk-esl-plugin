@@ -39,6 +39,10 @@ export interface PluginConfig {
   scanOnStart: boolean;
   /** How long the startup scan runs, in seconds. */
   scanDurationSeconds: number;
+  /** How long to wait for a device to accept a BLE connection before giving up on a repaint attempt, in seconds. */
+  paintConnectTimeoutSeconds: number;
+  /** How many times to attempt a repaint (including the first try) before giving up and reporting failure. */
+  paintRetries: number;
   /**
    * Base URL of this SignalK server, used for: (1) a `signalk`-sourced numeric value's automatic unit
    * conversion (`GET .../vessels/<context>/meta`, see `../pathMeta.ts`) unless `format=raw`, and (2) an
@@ -69,6 +73,8 @@ export function defaultConfig(): PluginConfig {
     templatesDir: '',
     scanOnStart: true,
     scanDurationSeconds: 20,
+    paintConnectTimeoutSeconds: 30,
+    paintRetries: 3,
     devices: [],
   };
 }
@@ -190,6 +196,20 @@ export function configSchema(app: ServerAPI, discovered: DiscoveredDevice[] = []
         description: 'How long the startup scan runs - increase if devices are missing from the "Device" picker below.',
         minimum: 1,
         default: defaults.scanDurationSeconds,
+      },
+      paintConnectTimeoutSeconds: {
+        type: 'number',
+        title: 'Paint connect timeout (seconds)',
+        description: 'How long to wait for a device to accept a BLE connection before giving up on a repaint attempt.',
+        minimum: 1,
+        default: defaults.paintConnectTimeoutSeconds,
+      },
+      paintRetries: {
+        type: 'number',
+        title: 'Paint retries',
+        description: 'How many times to attempt a repaint (including the first try) before giving up and reporting failure.',
+        minimum: 1,
+        default: defaults.paintRetries,
       },
       signalkApiUrl: {
         type: 'string',

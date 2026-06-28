@@ -52,6 +52,8 @@ export interface VendorDeviceConfig {
   aesKey?: string;
   /** Forces the device model facts instead of looking up the advertised PID - for hardware not yet in the driver's table. */
   modelOverride?: DeviceModelOverride;
+  /** How long to wait for the BLE connect step before giving up - if omitted, the driver picks its own default. */
+  connectTimeoutMs?: number;
 }
 
 export interface VendorDriver {

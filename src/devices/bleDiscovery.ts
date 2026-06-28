@@ -62,6 +62,23 @@ export async function forEachAdvertisedDevice(adapter: Adapter, fn: (advertised:
 }
 
 /**
+ * Retries `fn` up to `attempts` times (including the first try), returning on the first success -
+ * shared by the repaint scheduler and the CLI's `paint` command so one flaky BLE connection
+ * doesn't fail a whole repaint after a single bad attempt.
+ */
+export async function withRetries<T>(attempts: number, fn: (attempt: number) => Promise<T>): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= Math.max(1, attempts); attempt++) {
+    try {
+      return await fn(attempt);
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
+/**
  * Opens exactly one BLE discovery window and one D-Bus/BlueZ session, then hands the adapter to
  * `fn` - shared by `plugin.ts`'s startup scan and the CLI's `scan` command so scanning across
  * multiple registered vendor drivers costs one discovery window total, not one window per driver.
