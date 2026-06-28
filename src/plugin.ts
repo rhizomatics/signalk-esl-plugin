@@ -12,25 +12,33 @@ async function runStartupScan(app: ServerAPI, discovered: DiscoveredDevice[], du
   const startedAt = Date.now();
   let scanError: string | undefined;
   const drivers = allDrivers();
-  await withDiscovery(durationSeconds * 1000, async (adapter) => {
-    await forEachAdvertisedDevice(adapter, async ({ device, address, name, manufacturerId, manufacturerData }) => {
-      const driver = drivers.find((candidate) => candidate.matchesAdvertisement(name, manufacturerId));
-      if (!driver) {
-        return;
-      }
-      const found = await driver.identifyDevice(device, address, name, manufacturerId, manufacturerData).catch((err) => {
-        scanError = `${driver.vendor} scan failed: ${err.message}`;
-        app.debug(`${scanError}\n${err.stack ?? ''}`);
-        return undefined;
+  try {
+    await withDiscovery(durationSeconds * 1000, async (adapter) => {
+      await forEachAdvertisedDevice(adapter, async ({ device, address, name, manufacturerId, manufacturerData }) => {
+        const driver = drivers.find((candidate) => candidate.matchesAdvertisement(name, manufacturerId));
+        if (!driver) {
+          return;
+        }
+        const found = await driver.identifyDevice(device, address, name, manufacturerId, manufacturerData).catch((err) => {
+          scanError = `${driver.vendor} scan failed: ${err.message}`;
+          app.debug(`${scanError}\n${err.stack ?? ''}`);
+          return undefined;
+        });
+        if (!found) {
+          return;
+        }
+        discovered.push(found);
+        const pid = found.pid !== undefined ? `0x${found.pid.toString(16).padStart(4, '0')}` : 'unknown';
+        app.debug(`discovered ${driver.vendor} device "${found.name ?? ''}" [${found.address}] pid=${pid}`);
       });
-      if (!found) {
-        return;
-      }
-      discovered.push(found);
-      const pid = found.pid !== undefined ? `0x${found.pid.toString(16).padStart(4, '0')}` : 'unknown';
-      app.debug(`discovered ${driver.vendor} device "${found.name ?? ''}" [${found.address}] pid=${pid}`);
     });
-  });
+  } catch (err) {
+    // Without this, an error thrown anywhere in the discovery window (e.g. BlueZ dropping the
+    // D-Bus connection) skips every line below, leaving the admin UI stuck on "Scanning..."
+    // forever even though `discovered` may already hold devices found before the failure.
+    scanError = `scan failed: ${(err as Error).message}`;
+    app.debug(`${scanError}\n${(err as Error).stack ?? ''}`);
+  }
   // Surfaces the real cause in the admin UI (instead of only the debug log) - a scan that
   // ends in well under its configured duration is almost always this, not "no devices nearby".
   app.setPluginError(scanError ?? '');

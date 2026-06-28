@@ -47,7 +47,12 @@ export interface AdvertisedDevice {
  */
 export async function forEachAdvertisedDevice(adapter: Adapter, fn: (advertised: AdvertisedDevice) => Promise<void>): Promise<void> {
   for (const address of await adapter.devices()) {
-    const device = await adapter.getDevice(address);
+    // BlueZ can drop a device from its cache between `adapter.devices()` listing it and this
+    // lookup (e.g. it went out of range mid-scan) - skip it rather than aborting the whole scan.
+    const device = await adapter.getDevice(address).catch(() => undefined);
+    if (!device) {
+      continue;
+    }
     const name = await device.getName().catch(() => undefined);
     const manufacturerData = await device.getManufacturerData().catch(() => undefined);
     const [key] = Object.keys(manufacturerData ?? {});
