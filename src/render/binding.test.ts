@@ -137,7 +137,10 @@ test('renderBinding', async (t) => {
   });
 
   await t.test('source=einklabel,format=local_datetime_short renders the repaint timestamp', () => {
-    const context: TemplateContext = { signalk: { self: {} }, meta: { repainted: '2026-06-21T18:05:00Z' } };
+    const context: TemplateContext = {
+      signalk: { self: { environment: { time: { timezoneRegion: 'Europe/London' } } } },
+      meta: { repainted: '2026-06-21T17:05:00Z' },
+    };
     assert.equal(renderBinding(parseBinding('source=einklabel,path=repainted,format=local_datetime_short'), context), '21 Jun 26 18:05');
   });
 });

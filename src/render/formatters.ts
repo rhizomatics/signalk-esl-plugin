@@ -27,13 +27,17 @@ export function formatDisplayUnits(value: number, displayUnits: DisplayUnits, ro
 /**
  * The local vessel's timezone (`signalk.self.environment.time.timezoneRegion`), regardless of which
  * vessel's value is being formatted - the display's own clock/locale is what matters, not the data
- * source's. Falls back to UTC when unset.
+ * source's. Most installs never publish that path (it needs a GPS/position-derived timezone plugin),
+ * so this falls back to the host machine's own configured zone - the same thing the SignalK Data
+ * Browser ends up showing, since it's just the browser's local `Intl` zone rather than anything the
+ * server itself publishes. For the live plugin that's the device's own OS timezone (set once via
+ * `raspi-config`/`timedatectl` et al, not GPS-derived); for the CLI it's the developer machine's.
  */
 function selfTimezone(context: TemplateContext): string {
   const signalk = context.signalk as Record<string, unknown> | undefined;
   const self = signalk?.self as Record<string, unknown> | undefined;
   const environment = self?.environment as { time?: { timezoneRegion?: string } } | undefined;
-  return environment?.time?.timezoneRegion || 'utc';
+  return environment?.time?.timezoneRegion || Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
 /**

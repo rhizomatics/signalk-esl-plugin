@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { DateTime } from 'luxon';
 import { applyFormat, formatDisplayUnits } from './formatters';
 import { TemplateContext } from './types';
 
@@ -29,8 +30,9 @@ test('applyFormat', async (t) => {
     assert.equal(applyFormat('local_time', '2026-06-28T12:00:00Z', context, undefined), '13:00');
   });
 
-  await t.test('local_time defaults to UTC when there is no timezoneRegion', () => {
-    assert.equal(applyFormat('local_time', '2026-06-28T12:00:00Z', {}, undefined), '12:00');
+  await t.test('local_time falls back to the host machine\'s own timezone when there is no timezoneRegion', () => {
+    const expected = DateTime.fromISO('2026-06-28T12:00:00Z', { zone: 'utc' }).setZone(Intl.DateTimeFormat().resolvedOptions().timeZone).toFormat('HH:mm');
+    assert.equal(applyFormat('local_time', '2026-06-28T12:00:00Z', {}, undefined), expected);
   });
 
   await t.test('local_time returns empty string for a non-string value', () => {
