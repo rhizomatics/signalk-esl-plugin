@@ -1,3 +1,5 @@
+# 0.4.7
+- Fix node-ble imports
 # 0.4.6
 - Correct `node-ble` dependency to `@naugehyde/node-ble`
 # 0.4.5
