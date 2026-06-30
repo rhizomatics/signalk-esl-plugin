@@ -1,3 +1,12 @@
+# 0.5.0
+## Font Handling
+- Update set of built-in fonts for consistent Roboto monospace and serif
+- Update `tide.svg` template to use explicit font names to work around `resvg-wasm` limitations
+## Offline Design
+- Offline template development now possible using example data,
+  - Pass `-e` or `--example-data` as a CLI argument, pointing to a set of example JSON files
+  - Examples of example data provided in plugin and at https://github.com/rhizomatics/signalk-einklabel-plugin/blob/main/examples
+  - Works with `render`,`paint`,`field` and `fields`
 # 0.4.7
 - Fix node-ble imports
 # 0.4.6

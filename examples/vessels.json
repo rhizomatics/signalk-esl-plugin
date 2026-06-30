@@ -1,0 +1,56 @@
+{
+  "vessels": {
+    "self": {
+      "uuid": "urn:mrn:signalk:uuid:c3d69c28-98f5-472e-848f-3670db47e703",
+      "name": "MyBoat",
+      "navigation": {
+        "position": {
+          "value": {
+            "longitude": -5.834166,
+            "latitude": 57.009333
+          },
+          "timestamp": "2026-06-30T14:45:00.000Z",
+          "meta": {
+            "units": "degrees"
+          }
+        },
+        "speedOverGround": {
+          "value": 6.4,
+          "timestamp": "2026-06-30T14:45:00.000Z",
+          "meta": {
+            "units": "m/s"
+          }
+        },
+        "headingTrue": {
+          "value": 142.5,
+          "timestamp": "2026-06-30T14:45:00.000Z",
+          "meta": {
+            "units": "rad"
+          }
+        }
+      },
+      "electrical": {
+        "batteries": {
+          "house": {
+            "voltage": {
+              "value": 12.8,
+              "timestamp": "2026-06-30T14:45:00.000Z"
+            },
+            "temperature": {
+              "value": 22.4,
+              "timestamp": "2026-06-30T14:45:00.000Z"
+            }
+          }
+        }
+      },
+      "propulsion": {
+        "port": {
+          "revolutions": {
+            "value": 2000,
+            "timestamp": "2026-06-30T14:45:00.000Z"
+          }
+        }
+      }
+    }
+  }
+}

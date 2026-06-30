@@ -1,5 +1,7 @@
+import { readFile } from 'fs/promises';
+import path from 'path';
 import { Binding } from '../render/binding';
-import { resolveLocalZoneAbbreviation } from '../render/formatters';
+import { DisplayUnits, resolveLocalZoneAbbreviation } from '../render/formatters';
 import { TemplateContext } from '../render/types';
 import { fetchJson } from '../httpJson';
 import { fetchCategoryDisplayUnits } from '../unitCategories';
@@ -79,4 +81,78 @@ export async function assembleLiveContext(signalkUrl: string, bindings: Binding[
   const meta = { repainted: new Date().toISOString(), local_zone: resolveLocalZoneAbbreviation({ signalk }) };
 
   return { signalk, resources, pathMeta, categories, meta };
+}
+
+async function readJsonFile(filePath: string): Promise<unknown> {
+  let raw: string;
+  try {
+    raw = await readFile(filePath, 'utf-8');
+  } catch (err) {
+    throw new Error(`could not read example data file ${filePath} - ${(err as Error).message}`);
+  }
+  return JSON.parse(raw);
+}
+
+/**
+ * `-e/--example-data` counterpart to `assembleLiveContext`, for previewing a template with no SignalK
+ * server at all. Reads the same `{ signalk, resources, categories }` shapes a real server would
+ * return, but from static JSON files under `examplesDir`:
+ * - `<examplesDir>/vessels.json` - the full data model (`{ "vessels": { "self": {...}, ... } }`,
+ *   delta-tree leaves wrapped as `{ value, ... }` exactly like the REST API - see `unwrapSignalkTree`),
+ *   sliced down to whichever `context=` subtree each `source=signalk` binding needs.
+ * - `<examplesDir>/resources/<name>.json` - one file per `resource=<name>`, holding that resource's
+ *   data directly (no wrapper), matching the Resources API's response shape.
+ * - `<examplesDir>/categories.json` - a flat `{ "<category>": DisplayUnits, ... }` map, standing in for
+ *   what `fetchCategoryDisplayUnits` would otherwise resolve from a server's unit-preferences config
+ *   (categoryToBaseUnit + active preset + conversion definitions - no static-file equivalent for that
+ *   3-way join, so this file holds the already-resolved result directly).
+ *
+ * `pathMeta` has no static-file equivalent (it's live server-side config - see `fetchPathMeta`), so
+ * it's left empty: automatic unit conversion falls back to a path's `category=` binding if it has one,
+ * or shows the raw value otherwise.
+ */
+export async function assembleExampleContext(examplesDir: string, bindings: Binding[]): Promise<TemplateContext> {
+  const signalk: Record<string, unknown> = {};
+  const contexts = new Set(bindings.filter((binding) => binding.source === 'signalk').map((binding) => binding.context));
+  if (contexts.size > 0) {
+    const vesselsPath = path.join(examplesDir, 'vessels.json');
+    logDebug(`reading ${vesselsPath}`);
+    const vessels = await readJsonFile(vesselsPath);
+    for (const context of contexts) {
+      const segments = contextPath(context).split('/');
+      let node: unknown = vessels;
+      for (const segment of segments) {
+        node = node === null || typeof node !== 'object' ? undefined : (node as Record<string, unknown>)[segment];
+      }
+      if (node === undefined) {
+        throw new Error(`example data file ${vesselsPath} has no "${segments.join('.')}" subtree for context "${context}"`);
+      }
+      signalk[context] = unwrapSignalkTree(node);
+    }
+  }
+
+  const resources: Record<string, unknown> = {};
+  const resourceNames = new Set(bindings.filter((binding) => binding.source === 'resources').map((binding) => binding.resource as string));
+  for (const name of resourceNames) {
+    const resourcePath = path.join(examplesDir, 'resources', `${name}.json`);
+    logDebug(`reading ${resourcePath}`);
+    resources[name] = await readJsonFile(resourcePath);
+  }
+
+  const categoryNames = new Set(bindings.filter((binding) => binding.category).map((binding) => binding.category as string));
+  let categories: Record<string, DisplayUnits> = {};
+  if (categoryNames.size > 0) {
+    const categoriesPath = path.join(examplesDir, 'categories.json');
+    logDebug(`reading ${categoriesPath}`);
+    categories = (await readJsonFile(categoriesPath)) as Record<string, DisplayUnits>;
+    for (const category of categoryNames) {
+      if (!(category in categories)) {
+        throw new Error(`example data file ${categoriesPath} has no "${category}" entry`);
+      }
+    }
+  }
+
+  const meta = { repainted: new Date().toISOString(), local_zone: resolveLocalZoneAbbreviation({ signalk }) };
+
+  return { signalk, resources, pathMeta: {}, categories, meta };
 }

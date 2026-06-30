@@ -9,8 +9,9 @@ import { Colour, DeviceModelOverride } from '../devices/types';
 import { SvgRenderer } from '../render/svgRenderer';
 import { bitmapToPng } from '../render/png';
 import { Binding, findBindings, parseBinding, renderBinding } from '../render/binding';
-import { assembleLiveContext } from './liveContext';
+import { assembleExampleContext, assembleLiveContext } from './liveContext';
 import { logDebug, setLogLevel } from './log';
+import { TemplateContext } from '../render/types';
 
 registerDriver(new ZhsunycoDriver());
 
@@ -29,6 +30,11 @@ function parseColours(code: string): Colour[] {
     throw new Error(`unknown --colours value "${code}" - expected one of ${Object.keys(COLOUR_CODES).join(', ')}`);
   }
   return colours;
+}
+
+/** Shared by every command that takes -u/--url and -e/--example-data - -e wins when both are present (-u always carries a default, so its mere presence doesn't mean it was explicitly chosen). */
+function assembleContext(opts: { url: string; exampleData?: string }, bindings: Binding[]): Promise<TemplateContext> {
+  return opts.exampleData ? assembleExampleContext(opts.exampleData, bindings) : assembleLiveContext(opts.url, bindings);
 }
 
 /** Connects long enough to read the advertised name and manufacturer ID, then matches against registered drivers. */
@@ -153,6 +159,7 @@ program
   .requiredOption('-a, --address <address>', 'BLE address of the device')
   .requiredOption('-t, --template <path>', 'path to SVG template')
   .option('-u, --url <url>', 'SignalK server base URL - resolves the template\'s source=signalk/resources bindings', DEFAULT_SIGNALK_URL)
+  .option('-e, --example-data <dir>', 'load vessels/resources from local example JSON files in <dir> (e.g. ./examples) instead of a live SignalK server - alternative to -u')
   .option('-k, --aes-key <hex>', 'AES-128 key for device authentication, as 32 hex characters - defaults to the vendor\'s stock key if omitted')
   .option('-w, --width <px>', 'render width', '416')
   .option('--height <px>', 'render height', '240')
@@ -176,7 +183,7 @@ program
         }
       : undefined;
     const bindings = findBindings(await readFile(opts.template, 'utf-8'));
-    const context = await assembleLiveContext(opts.url, bindings);
+    const context = await assembleContext(opts, bindings);
     const renderer = new SvgRenderer();
     const bitmap = await renderer.render(opts.template, context, Number(opts.width), Number(opts.height));
     const connectTimeoutMs = Number(opts.connectTimeout) * 1000;
@@ -195,6 +202,7 @@ program
   .requiredOption('-t, --template <path>', 'path to SVG template')
   .requiredOption('-o, --output <path>', 'output PNG path')
   .option('-u, --url <url>', 'SignalK server base URL - resolves the template\'s source=signalk/resources bindings', DEFAULT_SIGNALK_URL)
+  .option('-e, --example-data <dir>', 'load vessels/resources from local example JSON files in <dir> (e.g. ./examples) instead of a live SignalK server - alternative to -u')
   .option('-w, --width <px>', 'render width', '416')
   .option('--height <px>', 'render height', '240')
   .option(
@@ -204,7 +212,7 @@ program
   )
   .action(async (opts) => {
     const bindings = findBindings(await readFile(opts.template, 'utf-8'));
-    const context = await assembleLiveContext(opts.url, bindings);
+    const context = await assembleContext(opts, bindings);
     const renderer = opts.font ? new SvgRenderer(opts.font) : new SvgRenderer();
     const bitmap = await renderer.render(opts.template, context, Number(opts.width), Number(opts.height));
     await writeFile(opts.output, bitmapToPng(bitmap));
@@ -216,6 +224,7 @@ program
   .description('List every <desc> binding in a template by element id, with its source spec and resolved value')
   .requiredOption('-t, --template <path>', 'path to SVG template')
   .option('-u, --url <url>', 'SignalK server base URL - resolves the template\'s source=signalk/resources bindings', DEFAULT_SIGNALK_URL)
+  .option('-e, --example-data <dir>', 'load vessels/resources from local example JSON files in <dir> (e.g. ./examples) instead of a live SignalK server - alternative to -u')
   .action(async (opts) => {
     const doc = new DOMParser().parseFromString(await readFile(opts.template, 'utf-8'), 'image/svg+xml');
     const elements = doc.getElementsByTagName('text');
@@ -236,7 +245,7 @@ program
       rows.map(async (row) => {
         if (row.error || !row.binding) return [row.id, row.desc, row.error ?? ''];
         try {
-          const context = await assembleLiveContext(opts.url, [row.binding]);
+          const context = await assembleContext(opts, [row.binding]);
           return [row.id, row.desc, renderBinding(row.binding, context)];
         } catch (err) {
           return [row.id, row.desc, `ERROR: ${(err as Error).message}`];
@@ -254,9 +263,10 @@ program
   .description('Resolve a single binding spec directly against a live SignalK server, with no template')
   .argument('<spec>', 'binding spec, e.g. "source=resources,resource=tides,path=station.name" or a bare SignalK path')
   .option('-u, --url <url>', 'SignalK server base URL - resolves the spec\'s source=signalk/resources binding', DEFAULT_SIGNALK_URL)
+  .option('-e, --example-data <dir>', 'load vessels/resources from local example JSON files in <dir> (e.g. ./examples) instead of a live SignalK server - alternative to -u')
   .action(async (spec, opts) => {
     const binding = parseBinding(spec);
-    const context = await assembleLiveContext(opts.url, [binding]);
+    const context = await assembleContext(opts, [binding]);
     console.log(renderBinding(binding, context));
   });
 

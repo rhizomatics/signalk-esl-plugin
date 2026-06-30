@@ -10,13 +10,26 @@ Since they are designed to be used in large quantity in small shops, they are ch
 
 Unlike some eInk projects, this plugin doesn't require any physical modification to the labels, or loading any new firmware. It can send an image to a supported shelf label fresh out of the box.
 
+## Installation
+
+Look for **eInk Label Instrument** in the [SignalK AppStore]() on your
+server ( under *Apps & Plugins* on the latest version).
+
+### Using Outside of SignalK
+
+The plugin can also be installed as a stand-alone module, which can be useful for designing templates away from the boat, and makes available the `esl-cli` command line tool for scanning devices and debugging templates.
+
+```bash
+npm install @rhizomatics/signalk-einklabel-plugin
+```
+
 ## Examples
 
 ### Tide Clock
 
 ![Tide Clock](docs/assets/screenshots/example_tidal_clock.png)
 
-The tide clock needs the [signalk-tides](https://github.com/openwatersio/signalk-tides) plugin to be installed and publishing tides to the Resources API. It can however be customized to run with other APIs or take data only from SignalK data paths.
+The tide clock needs the [signalk-tides](https://github.com/openwatersio/signalk-tides) plugin to be installed and publishing tides to the Resources API. The [tide.svg](https://github.com/rhizomatics/signalk-einklabel-plugin/blob/main/templates/tide.svg) can be customized to run with other APIs or take data only from SignalK data paths.
 
 ## Templating
 
@@ -68,15 +81,15 @@ These can all be combined as in `source=resources,resource=tides,path=extremes[2
 
 ### Fonts
 
-Three font types are loaded by default, use the font name or simply 'sans-serif' in the SVG editor and choose size and weight (bold, semi-bold etc). Some labels will make a decent attempt to gray scale. Use the simple pure red, yellow, white, black to match the label's limited colour choice (some labels only offer black and white, or black/white/red).
+Three font types are loaded by default, use the exact font name in the SVG editor and choose size and weight (bold, semi-bold etc). Some labels will make a decent attempt to gray scale. Use the simple pure red, yellow, white, black to match the label's limited colour choice (some labels only offer black and white, or black/white/red). If a font can't be matched it will default to (sans-serif) Roboto.
 
-* `serif` - Playfair Display
-* `sans-serif` - Roboto
-* `monospace` - JetBrains Mono
+* `serif` - `Roboto Serif`
+* `sans-serif` - `Roboto`
+* `monospace` - `Roboto Mono`
 
 ## Command Line Interface
 
-To get fast feedback on templates and shelf devices without updating and configuring SignalK, a CLI call `esl-cli` is provided that has these commands.
+To get fast feedback on templates and shelf devices without updating and configuring SignalK, a CLI call `esl-cli` is provided when the module is manually installed that has these commands. Use `--help` to get all the options.
 
 - `vendors` - list supported vendors
 - `scan` - report supported devices found from a BLE scan
@@ -85,13 +98,15 @@ See also the commands useful for debugging under [Developing Templates]
 - `render` - transform an SVG template and data into a PNG
 - `paint` - render an SVG template and data to a selected ESL
 
-( The CLI can also be run from a checked out module as `npm run cli -- command --args` )
+The width, height, vertical offset and colour palette for the device is taken from the internal register of devices, however can be overridden on the command line. This could be used to help you choose what size of label to buy, or to get an unsupported label working.
+
+( The CLI can also be run from a checked out module, or by opening a terminal shell at `~/.signalk/node_modules/@rhizomatics/signalk-einklabel-plugin`, as `npm run cli -- command --args` )
 
 ## Vendors
 
 ### Zhsunyco
 
-Also known as 'Suny'
+Also known as 'Suny' and 'WOLink'.
 
 - [BLE ESLs](https://www.zhsunyco.com/digital-display-solution-for-small-retail-business/ble-esl-solution/)
   - The range of labels available on retail sites like AliExpress may be larger than on their corporate site
@@ -114,9 +129,9 @@ The primary things managed and provided by the plugin are:
   - Optional: left blank, the plugin probes the probable values in likelihood order at startup - `http://localhost:3000`, `http://localhost`, `https://localhost`. Set it explicitly to skip probing
   - Either way, errors clearly if nothing responds (wrong port) or the probe is rejected (anonymous read access not enabled) - these endpoints must allow anonymous read access, since the plugin has no login flow
 
-### Extending
+## Extending
 
-#### Hardware
+### Hardware
 
 Additional vendors and devices can be added by a separate npm package that implements the `VendorDriver` interface and registers itself - there's no scanning of installed packages, registration is always an explicit call by the extension's own code.
 
@@ -124,7 +139,7 @@ Additional vendors and devices can be added by a separate npm package that imple
 - In the SignalK runtime, call this from the extension's own plugin `start()`. In the CLI, load the extension with `esl-cli --require <module> <command>`.
 - Declare this package as a `peerDependency` (not a regular dependency) in the extension package, so npm resolves a single shared copy of the registry.
 
-#### Developing Templates
+### Developing Templates
 
 Templates can be added to the configurable directory. [Inkscape](https://inkscape.org) free, open source, and recommended for editing templates, or your own favourite editor, or by hand in a text editor for hard core (or just tidying up the template side).
 
@@ -136,7 +151,9 @@ Placeholder text isn't necessary, and is ignored by the plugin, but makes it muc
 
 Inkscape adds its own metadata to images, which can be stripped off by exporting a simple SVG, although can be left in place with no harm; main reason to simplify the SVG is manual changes in a text editor.
 
-#### Debugging Templates
+Due to a limitation in the `resvg-wasm` library used to turn SVGs into images, the font family must match exactly one of the installed fonts - `Roboto` (sans serif), `Roboto Serif` or `Roboto Mono` rather than a generic `serif`,`sans-serif`,`monospace` font family. Inkscape has its own fonts, which won't match what's available in the SignalK plugin, so for more precise design, install [Roboto from Google](https://fonts.google.com/specimen/Roboto) via the web page, `brew` on MacOS or similar.
+
+### Debugging Templates
 
 The `esl-cli` can be used to debug and validate templates quickly:
 
@@ -145,7 +162,9 @@ The `esl-cli` can be used to debug and validate templates quickly:
 * `fields` - List the fields in the template, with the source specification and the rendered data value
 * `field` - Accept a source specification (outside of any template context) and return the rendered value if available
 
-##### Example
+### Examples
+
+#### List all Fields and Rendered Values
 
 ```bash
 npm run cli -- fields -t templates/tide.svg -u http://localhost
@@ -172,3 +191,11 @@ extremes.0.time-8-5      source=resources,resource=tides,path=extremes[1].time,f
 extremes.0.time-8-9      source=resources,resource=tides,path=extremes[2].time,format=day_mon     30 Jun
 extremes.0.level         source=resources,resource=tides,path=extremes[0].level,category=depth    1.3m
 ```
+
+### Offline Working
+
+`render` and `paint` need a `--url` argument to point to the SignalK server to retrieve data. If you don't have access to one, you can use `--example-data` or `-e` to point to a directory of example data, which is bundled with the plugin or available in GitHub at [examples](https://github.com/rhizomatics/signalk-einklabel-plugin/tree/main/examples). This also allows you to write templates for resource APIs that aren't available yet.
+
+- `vessels.json` - The standard SignalK vessel paths
+- `resources/xxxx.json` - The output of the `xxxx` resources API call
+- `categories.json` - SignalK unit categories needed for `category=depth` type formatting
