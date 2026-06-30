@@ -1,3 +1,5 @@
+# 0.5.1
+- Work around `resvg-wasm` font limitations by overriding generic font family with matching font name prior to rendering
 # 0.5.0
 ## Font Handling
 - Update set of built-in fonts for consistent Roboto monospace and serif

@@ -3,7 +3,7 @@ import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import { Resvg, initWasm } from '@resvg/resvg-wasm';
 import { Bitmap, Renderer, TemplateContext } from './types';
 import { parseBinding, renderBinding } from './binding';
-import { DEFAULT_FONT_PATHS } from './fonts';
+import { DEFAULT_FONT_PATHS, GENERIC_FONT_FAMILY_MAP } from './fonts';
 
 let wasmReady: Promise<void> | undefined;
 
@@ -12,6 +12,29 @@ function ensureWasmInitialized(): Promise<void> {
     wasmReady = readFile(require.resolve('@resvg/resvg-wasm/index_bg.wasm')).then((buffer) => initWasm(buffer));
   }
   return wasmReady;
+}
+
+// Only matches the CSS `font-family:` declaration inside a style="..." attribute, not the bare
+// XML `font-family="..."` presentation attribute - rewriting the latter in place would require
+// quote-aware handling of the surrounding XML attribute delimiter to avoid corrupting the
+// document, and it's unnecessary: resvg-wasm (and any browser) prefers the style declaration
+// whenever both are present, and every <text>/<tspan> in our templates sets one.
+const GENERIC_FONT_FAMILY_PATTERN = /font-family\s*:\s*(['"]?)(sans-serif|serif|monospace)\1(?=\s*[;"])/g;
+
+/**
+ * Rewrites CSS generic font-family keywords to the literal embedded name of the bundled font
+ * that backs each bucket (see GENERIC_FONT_FAMILY_MAP, ./fonts.ts), e.g. `font-family:sans-serif`
+ * becomes `font-family:'Roboto',sans-serif`. resvg-wasm only selects a font by exact name match -
+ * it does not route generic keywords to "the right" loaded font itself (see project memory) - so
+ * this lets templates use plain `serif`/`sans-serif`/`monospace` (as Inkscape writes by default)
+ * instead of every template author having to hardcode each bundled font's exact embedded name.
+ * The original generic keyword is kept as a trailing fallback so the rewritten value stays valid
+ * CSS for preview in e.g. Inkscape or a browser; it's inert as far as resvg-wasm is concerned.
+ */
+function expandGenericFontFamilies(svgSource: string): string {
+  return svgSource.replace(GENERIC_FONT_FAMILY_PATTERN, (_match, _quote: string, generic: string) => {
+    return `font-family:'${GENERIC_FONT_FAMILY_MAP[generic]}',${generic}`;
+  });
 }
 
 /**
@@ -57,7 +80,7 @@ export class SvgRenderer implements Renderer {
   async render(svgTemplatePath: string, context: TemplateContext, width: number, height: number): Promise<Bitmap> {
     const [, fontBuffers] = await Promise.all([ensureWasmInitialized(), this.loadFontBuffers()]);
 
-    const svgSource = await readFile(svgTemplatePath, 'utf-8');
+    const svgSource = expandGenericFontFamilies(await readFile(svgTemplatePath, 'utf-8'));
     const doc = new DOMParser().parseFromString(svgSource, 'image/svg+xml');
     const elements = doc.getElementsByTagName('text');
 

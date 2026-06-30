@@ -81,7 +81,7 @@ These can all be combined as in `source=resources,resource=tides,path=extremes[2
 
 ### Fonts
 
-Three font types are loaded by default, use the exact font name in the SVG editor and choose size and weight (bold, semi-bold etc). Some labels will make a decent attempt to gray scale. Use the simple pure red, yellow, white, black to match the label's limited colour choice (some labels only offer black and white, or black/white/red). If a font can't be matched it will default to (sans-serif) Roboto.
+Three font types are loaded by default, use the generic font family, or exact font name, in the SVG editor and choose size and weight (bold, semi-bold etc). Some labels will make a decent attempt to gray scale. Use the simple pure red, yellow, white, black to match the label's limited colour choice (some labels only offer black and white, or black/white/red). If a font can't be matched it will default to (sans-serif) Roboto.
 
 * `serif` - `Roboto Serif`
 * `sans-serif` - `Roboto`
@@ -151,7 +151,7 @@ Placeholder text isn't necessary, and is ignored by the plugin, but makes it muc
 
 Inkscape adds its own metadata to images, which can be stripped off by exporting a simple SVG, although can be left in place with no harm; main reason to simplify the SVG is manual changes in a text editor.
 
-Due to a limitation in the `resvg-wasm` library used to turn SVGs into images, the font family must match exactly one of the installed fonts - `Roboto` (sans serif), `Roboto Serif` or `Roboto Mono` rather than a generic `serif`,`sans-serif`,`monospace` font family. Inkscape has its own fonts, which won't match what's available in the SignalK plugin, so for more precise design, install [Roboto from Google](https://fonts.google.com/specimen/Roboto) via the web page, `brew` on MacOS or similar.
+Due to a limitation in the `resvg-wasm` library used to turn SVGs into images, the `font-family` is limited to `serif`,`sans-serif`,`monospace` or the exact name of one of the installed fonts - `Roboto` (sans serif), `Roboto Serif` or `Roboto Mono`. Inkscape has its own fonts, which won't match what's available in the SignalK plugin, so for more precise design, install [Roboto from Google](https://fonts.google.com/specimen/Roboto) via the web page, `brew` on MacOS or similar.
 
 ### Debugging Templates
 
